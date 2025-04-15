@@ -4,6 +4,7 @@ import React from 'react';
 import styled from 'styled-components';
 import { theme } from '../../../styles/theme';
 import {BorderRadius, Color, ComponentDefaultProps, Shadow, Size, Variant} from "../../../types/components.types";
+import { LoadingSpinner, SpinnerType } from './LoadingSpinner';
 
 interface ButtonProps extends ComponentDefaultProps {
     children?: React.ReactNode;
@@ -16,6 +17,10 @@ interface ButtonProps extends ComponentDefaultProps {
     disabled?: boolean;
     borderRadius?: BorderRadius;
     shadow?: Shadow;
+    loading?: boolean;
+    loadingText?: string;
+    spinnerType?: SpinnerType;
+    type?: "button" | "submit" | "reset";
 }
 
 // Styled component with namespace to avoid conflicts
@@ -26,11 +31,12 @@ const StyledButton = styled.button<{
     $fullWidth: boolean;
     $borderRadius: BorderRadius;
     $shadow: Shadow;
+    $isLoading: boolean;
 }>`
     all: unset;
     box-sizing: border-box;
     font-family: inherit;
-    cursor: pointer;
+    cursor: ${props => props.$isLoading ? 'default' : 'pointer'};
     display: inline-flex;
     gap: ${theme.spacing.xs};
     align-items: center;
@@ -75,22 +81,22 @@ const StyledButton = styled.button<{
                 return `
           background-color: ${baseColor};
           color: ${foregroundColor};
-          &:hover { background-color: ${baseColor}cc; } /* 80% opacity */
-          &:active { transform: translateY(1px); }
+          &:hover { background-color: ${props.$isLoading ? baseColor : `${baseColor}cc`}; } /* 80% opacity */
+          &:active { transform: ${props.$isLoading ? 'none' : 'translateY(1px)'}; }
         `;
             case 'outline':
                 return `
           background-color: transparent;
           border: 1px solid ${baseColor};
           color: ${baseColor};
-          &:hover { background-color: ${baseColor}1a; } /* 10% opacity */
-          &:active { transform: translateY(1px); }
+          &:hover { background-color: ${props.$isLoading ? 'transparent' : `${baseColor}1a`}; } /* 10% opacity */
+          &:active { transform: ${props.$isLoading ? 'none' : 'translateY(1px)'}; }
         `;
             case 'ghost':
                 return `
           background-color: transparent;
-          &:hover { background-color: ${theme.colors.accent}; } /* 10% opacity */
-          &:active { transform: translateY(1px); }
+          &:hover { background-color: ${props.$isLoading ? 'transparent' : theme.colors.accent}; } /* 10% opacity */
+          &:active { transform: ${props.$isLoading ? 'none' : 'translateY(1px)'}; }
         `;
             case 'link':
                 return `
@@ -98,15 +104,15 @@ const StyledButton = styled.button<{
           color: ${baseColor};
           padding: 0;
           text-decoration: underline;
-          &:hover { text-decoration: none; }
-          &:active { transform: translateY(1px); }
+          &:hover { text-decoration: ${props.$isLoading ? 'underline' : 'none'}; }
+          &:active { transform: ${props.$isLoading ? 'none' : 'translateY(1px)'}; }
         `;
             case 'text':
                 return `
           background-color: transparent;
           color: ${baseColor};
-          &:hover { background-color: ${baseColor}1a; } /* 10% opacity */
-          &:active { transform: translateY(1px); }
+          &:hover { background-color: ${props.$isLoading ? 'transparent' : `${baseColor}1a`}; } /* 10% opacity */
+          &:active { transform: ${props.$isLoading ? 'none' : 'translateY(1px)'}; }
         `;
             default:
                 return '';
@@ -120,6 +126,12 @@ const StyledButton = styled.button<{
     }
 `;
 
+const LoadingContainer = styled.span`
+  display: flex;
+  align-items: center;
+  gap: ${theme.spacing.xs};
+`;
+
 export const Button: React.FC<ButtonProps> = ({
     children,
     onClick,
@@ -131,7 +143,20 @@ export const Button: React.FC<ButtonProps> = ({
     disabled = false,
     borderRadius = 'sm',
     shadow = 'none',
+    loading = false,
+    loadingText,
+    spinnerType = "spinner",
+    type = "button",
 }) => {
+    // Map button size to spinner size
+    const getSpinnerSize = (): "xs" | "sm" | "md" => {
+        switch (size) {
+            case "small": return "xs";
+            case "large": return "md";
+            default: return "sm";
+        }
+    };
+    
     return (
         <StyledButton
             $variant={variant}
@@ -140,11 +165,25 @@ export const Button: React.FC<ButtonProps> = ({
             $fullWidth={fullWidth}
             $borderRadius={borderRadius}
             $shadow={shadow}
-            onClick={onClick}
+            $isLoading={loading}
+            onClick={loading ? undefined : onClick}
             className={className}
-            disabled={disabled}
+            disabled={disabled || loading}
+            type={type}
+            aria-busy={loading}
         >
-            {children}
+            {loading ? (
+                <LoadingContainer>
+                    <LoadingSpinner 
+                        type={spinnerType} 
+                        size={getSpinnerSize()} 
+                        color={color}
+                    />
+                    {loadingText}
+                </LoadingContainer>
+            ) : (
+                children
+            )}
         </StyledButton>
     );
 };

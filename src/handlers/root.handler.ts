@@ -23,12 +23,23 @@ export class RootHandler {
         const segments = params.segments;
         console.log({segments, url: request.url});
 
-
-        return NextResponse.json({
-            message: 'GET request received',
-            segments,
-            body: request.json(),
-        });
+        switch (segments[0]) {
+            case 'collections': {
+                const handler = new CollectionsHandler({
+                    segments,
+                    request,
+                    method: 'GET',
+                    params: { segments },
+                });
+                return await handler.handleAction();
+            }
+            default:
+                return NextResponse.json({
+                    message: 'GET request received',
+                    segments,
+                    body: request.json(),
+                });
+        }
     }
 
     async HANDLE_POST(

@@ -4,7 +4,7 @@ import {validateRequestBody} from "../../lib/validation";
 import {createCollectionSchema} from "../../types/collection.types";
 import {CollectionsModel} from "./collections.model";
 import dbConnect from "../../lib/dbConnect";
-import mongoose from 'mongoose'; // Add this import
+
 
 export default class CollectionsHandler {
     private segments: string[];
@@ -14,8 +14,8 @@ export default class CollectionsHandler {
 
     constructor(options: HandlerOptions) {
         this.segments = options.segments;
-        this.collection = options.segments[1];
-        this.action = options.segments[2];
+        this.collection = options.segments[0];
+        this.action = options.segments[1];
         this.request = options.request;
     }
 
@@ -23,12 +23,41 @@ export default class CollectionsHandler {
         switch (this.action) {
             case 'create':
                 return await this.create();
+            case 'get-all':
+                return await this.getAll();
             default:
                 return this.handleInvalidAction();
         }
     }
 
-    // In src/handlers/collections/collections.handler.ts
+    private async getAll() {
+        try {
+            const connection = await dbConnect();
+            if (!connection) {
+                return NextResponse.json({
+                    message: 'Failed to connect to database',
+                    error: 'Database connection failed'
+                }, { status: 500 });
+            }
+
+            const collections = await CollectionsModel.find({})
+                .sort({ createdAt: -1 }) // Sort by newest first
+                .select('name slug description createdAt updatedAt'); // Select only needed fields
+            
+            return NextResponse.json({
+                message: 'Collections retrieved successfully',
+                data: collections,
+            });
+        } catch (error) {
+            console.error('Error retrieving collections:', error);
+            return NextResponse.json({
+                message: 'Error retrieving collections',
+                error: (error as Error).message,
+                stack: process.env.NODE_ENV === 'development' ? (error as Error).stack : undefined
+            }, { status: 500 });
+        }
+    }
+
     private async create() {
         try {
             const connection = await dbConnect();
@@ -41,15 +70,12 @@ export default class CollectionsHandler {
 
             const validation = await validateRequestBody(createCollectionSchema, this.request);
             if (!validation.success) {
-                console.log('VALIDATION RESULT:::', validation);
                 return validation.error;
             }
 
             const {name, slug, description} = validation.data;
-            console.log('INCOMING DATA:', {name, slug, description});
 
             try {
-                // Check if a collection with the same slug already exists
                 const existingCollection = await CollectionsModel.findOne({ slug });
                 if (existingCollection) {
                     return NextResponse.json({
@@ -58,14 +84,12 @@ export default class CollectionsHandler {
                     }, { status: 409 });
                 }
 
-                // Create document using the model directly
                 const newCollection = new CollectionsModel({
                     name,
                     slug,
                     description,
                 });
 
-                // Set timeout for the operation
                 const savedCollection = await Promise.race([
                     newCollection.save(),
                     new Promise((_, reject) =>
@@ -73,14 +97,11 @@ export default class CollectionsHandler {
                     )
                 ]);
 
-                console.log('Document saved:', savedCollection);
-
                 return NextResponse.json({
                     message: 'Collection created successfully',
                     data: savedCollection,
                 });
             } catch (saveError) {
-                console.error('Error saving collection:', saveError);
                 return NextResponse.json({
                     message: 'Error saving collection to database',
                     error: (saveError as Error).message

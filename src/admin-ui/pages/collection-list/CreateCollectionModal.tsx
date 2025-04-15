@@ -1,20 +1,21 @@
 "use client"
 
-import React, { useEffect } from "react"
+import React, { useEffect, useState } from "react"
 import { useForm, Controller } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import z from "zod"
 import slugify from "slugify"
 import styled from "styled-components"
-import { Loader2 } from "lucide-react"
 import { theme } from "../../../styles/theme"
 import { Modal } from "../../components/ui/Modal"
 import { Input } from "../../components/ui/Input"
 import { TextArea } from "../../components/ui/TextArea"
 import { Button } from "../../components/ui/Button"
 import { FormField } from "../../components/ui/FormField"
+import { LoadingSpinner } from "../../components/ui/LoadingSpinner"
+import api from "../../../lib/api"
+import { Text } from "../../components/ui/Text"
 
-// Define the form schema with zod
 const createCollectionSchema = z.object({
   name: z.string()
     .min(1, "Collection name is required")
@@ -27,6 +28,7 @@ const createCollectionSchema = z.object({
     .max(500, "Description cannot exceed 500 characters")
     .optional()
     .nullable()
+    .transform(val => val === "" ? null : val) 
 })
 
 type CreateCollectionFormValues = z.infer<typeof createCollectionSchema>
@@ -50,11 +52,20 @@ const FormActions = styled.div`
   margin-top: ${theme.spacing.md};
 `
 
+const ErrorMessage = styled.div`
+  background-color: ${theme.colors.error}15;
+  border: 1px solid ${theme.colors.error}30;
+  border-radius: ${theme.borderRadius.md};
+  padding: ${theme.spacing.md};
+  margin-bottom: ${theme.spacing.md};
+`
+
 export const CreateCollectionModal: React.FC<CreateCollectionModalProps> = ({
   isOpen,
   onClose,
   onSubmit
 }) => {
+  const [apiError, setApiError] = useState<string | null>(null);
   const { 
     control, 
     handleSubmit, 
@@ -72,11 +83,19 @@ export const CreateCollectionModal: React.FC<CreateCollectionModalProps> = ({
   })
 
   const handleFormSubmit = async (data: CreateCollectionFormValues) => {
+    setApiError(null);
     try {
-      await onSubmit(data)
-      handleClose()
-    } catch (error) {
-      console.error("Failed to create collection:", error)
+      await api.post('/kyper/collections/create', data);
+      await onSubmit(data);
+      handleClose();
+    } catch (error: any) {
+      console.error("Failed to create collection:", error);
+      setApiError(
+        error.response?.data?.message || 
+        error.response?.data?.error || 
+        error.message || 
+        'An unexpected error occurred'
+      );
     }
   }
 
@@ -95,8 +114,9 @@ export const CreateCollectionModal: React.FC<CreateCollectionModalProps> = ({
   }, [name, setValue])
 
   const handleClose = () => {
-    reset()
-    onClose()
+    setApiError(null);
+    reset();
+    onClose();
   }
 
   return (
@@ -113,6 +133,14 @@ export const CreateCollectionModal: React.FC<CreateCollectionModalProps> = ({
       />
 
       <Modal.Body>
+        {apiError && (
+          <ErrorMessage>
+            <Text type="p" color="error">
+              {apiError}
+            </Text>
+          </ErrorMessage>
+        )}
+        
         <Form onSubmit={handleSubmit(handleFormSubmit)} noValidate>
           <FormField
             label="Name"
@@ -145,7 +173,7 @@ export const CreateCollectionModal: React.FC<CreateCollectionModalProps> = ({
                 <Input
                   {...field}
                   placeholder="blog-posts"
-                  disabled={true}
+                  disabled={isSubmitting}
                 />
               )}
             />
@@ -185,15 +213,12 @@ export const CreateCollectionModal: React.FC<CreateCollectionModalProps> = ({
           color="primary"
           onClick={handleSubmit(handleFormSubmit)}
           disabled={isSubmitting}
+          loading={isSubmitting}
+          loadingText="Creating..."
+          spinnerType="spinner"
+          type="submit"
         >
-          {isSubmitting ? (
-            <>
-              <Loader2 size={16} className="animate-spin" />
-              <span>Creating...</span>
-            </>
-          ) : (
-            "Create Collection"
-          )}
+          Create Collection
         </Button>
       </Modal.Footer>
     </Modal>
