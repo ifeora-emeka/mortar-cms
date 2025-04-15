@@ -30,6 +30,7 @@
   "dependencies": {
     "@hookform/resolvers": "^5.0.1",
     "@types/styled-components": "^5.1.34",
+    "axios": "^1.8.4",
     "lucide-react": "^0.487.0",
     "react-hook-form": "^7.55.0",
     "slugify": "^1.6.6",

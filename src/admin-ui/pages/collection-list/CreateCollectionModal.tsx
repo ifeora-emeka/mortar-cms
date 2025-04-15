@@ -71,18 +71,15 @@ export const CreateCollectionModal: React.FC<CreateCollectionModalProps> = ({
     }
   })
 
-  // Handle form submission
   const handleFormSubmit = async (data: CreateCollectionFormValues) => {
     try {
       await onSubmit(data)
       handleClose()
     } catch (error) {
       console.error("Failed to create collection:", error)
-      // You could add toast notification here
     }
   }
 
-  // Generate slug from name
   const name = watch("name")
   useEffect(() => {
     if (name) {
@@ -97,7 +94,6 @@ export const CreateCollectionModal: React.FC<CreateCollectionModalProps> = ({
     }
   }, [name, setValue])
 
-  // Reset form on close
   const handleClose = () => {
     reset()
     onClose()

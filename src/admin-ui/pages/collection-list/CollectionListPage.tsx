@@ -59,10 +59,8 @@ export const CollectionListPage: React.FC = () => {
   }
   
   const handleSubmitCollection = async (data: any) => {
-    // In a real app, this would be an API call
     console.log("Creating collection:", data)
     
-    // Mock adding the new collection to state
     const newCollection = {
       _id: `${Date.now()}`, // Use a timestamp as a mock ID
       name: data.name,
@@ -73,7 +71,6 @@ export const CollectionListPage: React.FC = () => {
     
     setCollections(prev => [newCollection, ...prev])
     
-    // Simulate API call delay
     await new Promise(resolve => setTimeout(resolve, 800))
   }
 

@@ -89,8 +89,7 @@ const StyledButton = styled.button<{
             case 'ghost':
                 return `
           background-color: transparent;
-          color: ${baseColor};
-          &:hover { background-color: ${baseColor}1a; } /* 10% opacity */
+          &:hover { background-color: ${theme.colors.accent}; } /* 10% opacity */
           &:active { transform: translateY(1px); }
         `;
             case 'link':
