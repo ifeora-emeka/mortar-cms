@@ -37,9 +37,6 @@ export class RootHandler {
     ) {
         const segments = params.segments;
 
-        // /api/kyper/collections/:collection/:action
-        // /api/kyper/schema
-
         switch (segments[0]) {
             case 'collections': {
                 const handler = new CollectionsHandler({
@@ -48,7 +45,7 @@ export class RootHandler {
                     method: 'POST',
                     params: { segments },
                 });
-                return await handler.handleAction(); // Ensure the response is returned
+                return await handler.handleAction(); 
             }
             default:
                 return NextResponse.json(
