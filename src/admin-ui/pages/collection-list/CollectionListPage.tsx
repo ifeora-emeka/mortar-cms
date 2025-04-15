@@ -8,6 +8,7 @@ import { Text } from "../../components/ui/Text"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableContainer } from "../../components/ui/Table"
 import { PageBody } from "../../components/PageBody"
 import { MessagePlaceholder } from "../../components/placeholders/MessagePlaceholder"
+import { CreateCollectionModal } from "./CreateCollectionModal"
 
 const ActionButton = styled(Button)`
   min-width: 150px;
@@ -22,7 +23,7 @@ const StyledTable = styled(Table)`
 `
 
 export const CollectionListPage: React.FC = () => {
-  const collections = [
+  const [collections, setCollections] = useState([
     {
       _id: "1",
       name: "Blog Posts",
@@ -41,7 +42,9 @@ export const CollectionListPage: React.FC = () => {
       slug: "team-members",
       createdAt: "2023-09-01T14:20:00Z",
     },
-  ]
+  ])
+  
+  const [isModalOpen, setIsModalOpen] = useState(false)
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("en-US", {
@@ -52,7 +55,26 @@ export const CollectionListPage: React.FC = () => {
   }
 
   const handleCreateCollection = () => {
-    console.log("Create collection clicked")
+    setIsModalOpen(true)
+  }
+  
+  const handleSubmitCollection = async (data: any) => {
+    // In a real app, this would be an API call
+    console.log("Creating collection:", data)
+    
+    // Mock adding the new collection to state
+    const newCollection = {
+      _id: `${Date.now()}`, // Use a timestamp as a mock ID
+      name: data.name,
+      slug: data.slug,
+      createdAt: new Date().toISOString(),
+      description: data.description,
+    }
+    
+    setCollections(prev => [newCollection, ...prev])
+    
+    // Simulate API call delay
+    await new Promise(resolve => setTimeout(resolve, 800))
   }
 
   return (
@@ -130,6 +152,12 @@ export const CollectionListPage: React.FC = () => {
           }
         />
       )}
+      
+      <CreateCollectionModal 
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSubmit={handleSubmitCollection}
+      />
     </PageBody>
   )
 }

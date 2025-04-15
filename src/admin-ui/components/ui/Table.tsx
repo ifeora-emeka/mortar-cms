@@ -103,7 +103,7 @@ const StyledTable = styled.table<{
 `
 
 const StyledTableHeader = styled.thead`
-    background-color: ${theme.colors.muted};
+    background-color: ${theme.colors.accent};
     border-bottom: 1px solid ${theme.colors.border};
 
     @media (max-width: ${theme.breakpoints.md}) {
