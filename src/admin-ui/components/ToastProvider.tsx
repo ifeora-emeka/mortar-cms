@@ -1,7 +1,7 @@
 "use client"
 
 import React, { createContext, useContext, useState } from "react"
-import { Toast, ToastVariant, ToastProvider as RadixToastProvider } from "./ui/Toast"
+import { Toast, ToastVariant } from "./ui/Toast"
 import * as ToastPrimitive from "@radix-ui/react-toast"
 
 type ToastContextType = {
@@ -12,7 +12,7 @@ type ToastContextType = {
     duration?: number
     action?: React.ReactNode
     altText?: string
-  }) => void
+  }) => string
   dismiss: (id: string) => void
 }
 
@@ -77,7 +77,7 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     // Remove toast after animation is complete
     setTimeout(() => {
       setToasts((prev) => prev.filter((toast) => toast.id !== id))
-    }, 200)
+    }, 300)
   }
 
   const handleOpenChange = (open: boolean, id: string) => {
@@ -106,7 +106,21 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         ))}
         
         <ToastPrimitive.Viewport 
-          className="fixed bottom-0 right-0 flex flex-col p-6 gap-2 w-[380px] max-w-[100vw] m-0 list-none z-[9999] outline-none"
+          style={{
+            position: 'fixed',
+            bottom: 0,
+            right: 0,
+            display: 'flex',
+            flexDirection: 'column',
+            padding: '16px',
+            gap: '8px',
+            width: '380px',
+            maxWidth: '100vw',
+            margin: 0,
+            listStyle: 'none',
+            zIndex: 9999,
+            outline: 'none'
+          }}
         />
       </ToastPrimitive.Provider>
     </ToastContext.Provider>

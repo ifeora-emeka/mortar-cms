@@ -15,7 +15,6 @@ import { Dropdown, DropdownTrigger, DropdownContent, DropdownItem } from "../../
 import { Modal } from "../../components/ui/Modal"
 import { useToast } from "../../components/ToastProvider"
 import api from "../../../lib/api"
-import { Layout } from "../../components/layout"
 
 const ActionButton = styled(Button)`
   min-width: 150px;
@@ -225,11 +224,6 @@ export const CollectionListPage: React.FC = () => {
 
   const handleSubmitCollection = async (data: any) => {
     try {
-      toast({
-        title: "Collection created",
-        description: `Successfully created collection "${data.name}"`,
-        duration: 5000
-      })
       await fetchCollections()
     } catch (error: any) {
       console.error('Error refreshing collections:', error)

@@ -126,8 +126,8 @@ export const SideNav: React.FC<SideNavProps> = ({ isExpanded, onToggle }) => {
   
   const navItems: NavItem[] = [
       {
-        id: 'entires',
-        label: 'Entires',
+        id: 'entries',
+        label: 'Entries',
         icon: <PencilIcon size={20} />,
         href: '/entries'
       },

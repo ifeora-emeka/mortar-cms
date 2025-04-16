@@ -33,14 +33,6 @@ export default class CollectionsHandler {
 
     private async getAll() {
         try {
-            const connection = await dbConnect();
-            if (!connection) {
-                return NextResponse.json({
-                    message: 'Failed to connect to database',
-                    error: 'Database connection failed'
-                }, { status: 500 });
-            }
-
             const collections = await CollectionsModel.find({})
                 .sort({ createdAt: -1 }) // Sort by newest first
                 .select('name slug description createdAt updatedAt'); // Select only needed fields
@@ -61,14 +53,6 @@ export default class CollectionsHandler {
 
     private async create() {
         try {
-            const connection = await dbConnect();
-            if (!connection) {
-                return NextResponse.json({
-                    message: 'Failed to connect to database',
-                    error: 'Database connection failed'
-                }, { status: 500 });
-            }
-
             const validation = await validateRequestBody(createCollectionSchema, this.request);
             if (!validation.success) {
                 return validation.error;

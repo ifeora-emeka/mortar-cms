@@ -84,7 +84,7 @@ const StyledToast = styled(ToastPrimitive.Root)<{
   gap: ${theme.spacing.xs};
   background: ${theme.colors.card};
   box-shadow: ${theme.shadows.md};
-  border: 1px solid ${props => {
+  border-left: 3px solid ${props => {
     switch (props.$variant) {
       case "success": return theme.colors.success;
       case "info": return theme.colors.info;
@@ -223,13 +223,5 @@ export const Toast: React.FC<ToastProps> = ({
   );
 };
 
-export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  return (
-    <ToastPrimitive.Provider>
-      {children}
-      <StyledViewport />
-    </ToastPrimitive.Provider>
-  );
-};
-
+// Removed duplicate ToastProvider to avoid conflicts with ToastProvider.tsx
 Toast.displayName = "Toast";

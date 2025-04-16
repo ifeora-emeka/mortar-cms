@@ -113,6 +113,7 @@ export const CreateCollectionModal: React.FC<CreateCollectionModalProps> = ({
             toast({
                 title: "Validation Error",
                 description: "Name and slug are required fields",
+                variant: "error",
                 duration: 5000
             });
             return;
@@ -120,12 +121,19 @@ export const CreateCollectionModal: React.FC<CreateCollectionModalProps> = ({
 
         setIsSubmitting(true);
         try {
-            await api.post('/kyper/collections/create', formValues);
-            await onSubmit(formValues);
+            const payload = {
+                ...formValues,
+                description: formValues.description.trim() || null
+            };
+            
+            await api.post('/kyper/collections/create', payload);
+            //@ts-ignore
+            await onSubmit(payload);
 
             toast({
                 title: "Collection created",
                 description: `Successfully created collection "${formValues.name}"`,
+                variant: "success",
                 duration: 5000
             });
 
@@ -141,6 +149,7 @@ export const CreateCollectionModal: React.FC<CreateCollectionModalProps> = ({
             toast({
                 title: "Failed to create collection",
                 description: errorMessage,
+                variant: "error",
                 duration: 8000
             });
 
@@ -148,6 +157,7 @@ export const CreateCollectionModal: React.FC<CreateCollectionModalProps> = ({
                 toast({
                     title: "Duplicate slug detected",
                     description: "Please modify the collection name to generate a different slug",
+                    variant: "warning",
                     duration: 6000
                 });
             }
@@ -229,7 +239,12 @@ export const CreateCollectionModal: React.FC<CreateCollectionModalProps> = ({
                         <TextArea
                             name="description"
                             value={formValues.description}
-                            onChange={handleInputChange}
+                            onChange={e => {
+                                setFormValues(prev => ({
+                                    ...prev,
+                                    description: e.target.value
+                                }))
+                            }}
                             placeholder="Describe what this collection will contain..."
                             disabled={isSubmitting}
                             rows={4}
