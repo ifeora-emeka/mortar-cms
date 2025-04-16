@@ -15,6 +15,7 @@ import { Dropdown, DropdownTrigger, DropdownContent, DropdownItem } from "../../
 import { Modal } from "../../components/ui/Modal"
 import { useToast } from "../../components/ToastProvider"
 import api from "../../../lib/api"
+import { Layout } from "../../components/layout"
 
 const ActionButton = styled(Button)`
   min-width: 150px;
@@ -75,7 +76,7 @@ const DeleteConfirmationModal: React.FC<DeleteModalProps> = ({
   isDeleting
 }) => {
   if (!collection) return null;
-  
+
   return (
     <Modal
       isOpen={isOpen}
@@ -88,7 +89,7 @@ const DeleteConfirmationModal: React.FC<DeleteModalProps> = ({
         subheading="This action cannot be undone"
         onClose={onClose}
       />
-      
+
       <Modal.Body>
         <ConfirmationModalContent>
           <Text type="p">
@@ -99,7 +100,7 @@ const DeleteConfirmationModal: React.FC<DeleteModalProps> = ({
           </WarningText>
         </ConfirmationModalContent>
       </Modal.Body>
-      
+
       <Modal.Footer>
         <Button
           variant="ghost"
@@ -142,7 +143,7 @@ export const CollectionListPage: React.FC = () => {
   const fetchCollections = async () => {
     setIsLoading(true)
     setError(null)
-    
+
     try {
       const response = await api.get('/kyper/collections/get-all')
       if (response.data && response.data.data) {
@@ -153,7 +154,7 @@ export const CollectionListPage: React.FC = () => {
     } catch (err: any) {
       console.error('Error fetching collections:', err)
       setError(err.response?.data?.message || err.message || 'Failed to load collections')
-      
+
       toast({
         title: "Error loading collections",
         description: err.response?.data?.message || err.message || 'Failed to load collections',
@@ -175,7 +176,7 @@ export const CollectionListPage: React.FC = () => {
   const handleCreateCollection = () => {
     setIsModalOpen(true)
   }
-  
+
   const handleEditCollection = (collection: Collection) => {
     setSelectedCollection(collection)
     // For now we'll just log since we don't have the edit modal yet
@@ -186,35 +187,32 @@ export const CollectionListPage: React.FC = () => {
       duration: 5000
     })
   }
-  
+
   const handleDeleteClick = (collection: Collection) => {
     setSelectedCollection(collection)
     setIsDeleteModalOpen(true)
   }
-  
+
   const handleDeleteConfirm = async () => {
     if (!selectedCollection) return
-    
+
     setIsDeleting(true)
     try {
-      // In a real app, you would call an API endpoint like:
-      // await api.delete(`/kyper/collections/${selectedCollection._id}`)
       console.log(`Deleting collection: ${selectedCollection._id}`)
-      
-      // For now we'll simulate the deletion by removing it from state
+
       setCollections(collections.filter(c => c._id !== selectedCollection._id))
-      
+
       toast({
         title: "Collection deleted",
         description: `Successfully deleted collection "${selectedCollection.name}"`,
         duration: 5000
       })
-      
+
       setIsDeleteModalOpen(false)
       setSelectedCollection(null)
     } catch (err: any) {
       console.error('Error deleting collection:', err)
-      
+
       toast({
         title: "Error deleting collection",
         description: err.response?.data?.message || err.message || 'Failed to delete collection',
@@ -224,7 +222,7 @@ export const CollectionListPage: React.FC = () => {
       setIsDeleting(false)
     }
   }
-  
+
   const handleSubmitCollection = async (data: any) => {
     try {
       toast({
@@ -271,9 +269,9 @@ export const CollectionListPage: React.FC = () => {
           variant="outlined"
           color="primary"
           actions={
-            <Button 
-              variant="solid" 
-              color="primary" 
+            <Button
+              variant="solid"
+              color="primary"
               onClick={handleCreateCollection}
             >
               <PlusCircle size={16} />
@@ -330,11 +328,11 @@ export const CollectionListPage: React.FC = () => {
                     </DropdownTrigger>
                     <DropdownContent>
                       <DropdownItem onSelect={() => handleEditCollection(collection)}>
-                        <Edit size={16} /> 
+                        <Edit size={16} />
                         <span style={{ marginLeft: theme.spacing.sm }}>Edit</span>
                       </DropdownItem>
                       <DropdownItem onSelect={() => handleDeleteClick(collection)}>
-                        <Trash2 size={16} color={theme.colors.error} /> 
+                        <Trash2 size={16} color={theme.colors.error} />
                         <span style={{ marginLeft: theme.spacing.sm, color: theme.colors.error }}>Delete</span>
                       </DropdownItem>
                     </DropdownContent>
@@ -349,36 +347,38 @@ export const CollectionListPage: React.FC = () => {
   }
 
   return (
-    <PageBody
-      heading="Collections"
-      subheading="Manage your content structure and organization"
-      rightContent={
-        <ActionButton 
-          variant="solid" 
-          color="primary" 
-          shadow="sm" 
-          onClick={handleCreateCollection}
-        >
-          <PlusCircle size={18} />
-          <span>New Collection</span>
-        </ActionButton>
-      }
-    >
-      {renderContent()}
-      
-      <CreateCollectionModal 
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onSubmit={handleSubmitCollection}
-      />
-      
-      <DeleteConfirmationModal
-        isOpen={isDeleteModalOpen}
-        collection={selectedCollection}
-        onClose={() => setIsDeleteModalOpen(false)}
-        onConfirm={handleDeleteConfirm}
-        isDeleting={isDeleting}
-      />
-    </PageBody>
+    <Layout>
+      <PageBody
+        heading="Collections"
+        subheading="Manage your content structure and organization"
+        rightContent={
+          <ActionButton
+            variant="solid"
+            color="primary"
+            shadow="sm"
+            onClick={handleCreateCollection}
+          >
+            <PlusCircle size={18} />
+            <span>New Collection</span>
+          </ActionButton>
+        }
+      >
+        {renderContent()}
+
+        <CreateCollectionModal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          onSubmit={handleSubmitCollection}
+        />
+
+        <DeleteConfirmationModal
+          isOpen={isDeleteModalOpen}
+          collection={selectedCollection}
+          onClose={() => setIsDeleteModalOpen(false)}
+          onConfirm={handleDeleteConfirm}
+          isDeleting={isDeleting}
+        />
+      </PageBody>
+    </Layout>
   )
 }

@@ -1,27 +1,30 @@
 'use client'
 import React from "react";
 import StyledComponentsRegistry from "./components/registry";
-import {ThemeProvider} from "./components/theme-provider";
-import {CollectionListPage} from "./pages/collection-list/CollectionListPage";
+import { ThemeProvider } from "./components/theme-provider";
 import styled from "styled-components";
-import {ToastProvider} from "./components/ToastProvider";
+import { ToastProvider } from "./components/ToastProvider";
+import RootPage from "./pages/RootPage";
 
-// Content wrapper to ensure proper positioning
 const ContentWrapper = styled.div`
   position: relative;
   min-height: 100vh;
 `;
 
-export function AdminDashboard(){
-    return (
-      <StyledComponentsRegistry>
-        <ThemeProvider>
-          <ToastProvider>
-            <ContentWrapper>
-              <CollectionListPage/>
-            </ContentWrapper>
-          </ToastProvider>
-        </ThemeProvider>
-      </StyledComponentsRegistry>
-    );
+type Props = {
+  segments: string[];
+}
+
+export function AdminDashboard({segments}: Props) {
+  return (
+    <StyledComponentsRegistry>
+      <ThemeProvider>
+        <ToastProvider>
+          <ContentWrapper>
+            <RootPage segments={segments} />
+          </ContentWrapper>
+        </ToastProvider>
+      </ThemeProvider>
+    </StyledComponentsRegistry>
+  );
 }
