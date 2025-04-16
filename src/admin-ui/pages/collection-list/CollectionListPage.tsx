@@ -9,6 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableCon
 import { PageBody } from "../../components/PageBody"
 import { MessagePlaceholder } from "../../components/placeholders/MessagePlaceholder"
 import { TablePlaceholder } from "../../components/placeholders/TablePlaceholder"
+import { ErrorPlaceholder } from "../../components/placeholders/ErrorPlaceholder"
 import { CreateCollectionModal } from "./CreateCollectionModal"
 import api from "../../../lib/api"
 
@@ -22,6 +23,15 @@ const ActionButton = styled(Button)`
 
 const StyledTable = styled(Table)`
   min-width: 600px;
+`
+
+const TruncatedText = styled(Text)`
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  max-width: 250px;
 `
 
 interface Collection {
@@ -84,25 +94,19 @@ export const CollectionListPage: React.FC = () => {
 
   const renderContent = () => {
     if (isLoading) {
-      return <TablePlaceholder rowCount={5} columnCount={4} animation="pulse" />
+      return <TablePlaceholder rowCount={5} columnCount={5} animation="pulse" />
     }
 
     if (error) {
       return (
-        <MessagePlaceholder
+        <ErrorPlaceholder
           heading="Error loading collections"
           subheading={error}
+          type="error"
           variant="filled"
           color="error"
-          actions={
-            <Button 
-              variant="solid" 
-              color="primary" 
-              onClick={fetchCollections}
-            >
-              <span>Try Again</span>
-            </Button>
-          }
+          retryText="Try Again"
+          onRetry={fetchCollections}
         />
       )
     }
@@ -136,6 +140,7 @@ export const CollectionListPage: React.FC = () => {
             <TableRow>
               <TableHead>Name</TableHead>
               <TableHead>Slug</TableHead>
+              <TableHead>Description</TableHead>
               <TableHead>Created</TableHead>
               <TableHead align="right">Actions</TableHead>
             </TableRow>
@@ -152,6 +157,15 @@ export const CollectionListPage: React.FC = () => {
                   <Text type="p" muted>
                     {collection.slug}
                   </Text>
+                </TableCell>
+                <TableCell data-label="Description">
+                  {collection.description ? (
+                    <TruncatedText type="p" muted>
+                      {collection.description}
+                    </TruncatedText>
+                  ) : (
+                    <Text type="p" muted>--</Text>
+                  )}
                 </TableCell>
                 <TableCell data-label="Created">
                   {formatDate(collection.createdAt)}

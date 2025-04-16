@@ -1,7 +1,7 @@
 "use client"
 
 import React from "react"
-import styled, { keyframes } from "styled-components"
+import styled, { keyframes, css } from "styled-components"
 import { theme } from "../../../styles/theme"
 import { BorderRadius } from "../../../types/components.types"
 
@@ -19,28 +19,32 @@ interface SkeletonProps {
   inline?: boolean
 }
 
-const pulse = keyframes`
-  0% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.4;
-  }
-  100% {
-    opacity: 1;
-  }
+const pulse = css`
+  ${keyframes`
+    0% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.4;
+    }
+    100% {
+      opacity: 1;
+    }
+  `}
 `
 
-const wave = keyframes`
-  0% {
-    transform: translateX(-100%);
-  }
-  50% {
-    transform: translateX(100%);
-  }
-  100% {
-    transform: translateX(100%);
-  }
+const wave = css`
+  ${keyframes`
+    0% {
+      transform: translateX(-100%);
+    }
+    50% {
+      transform: translateX(100%);
+    }
+    100% {
+      transform: translateX(100%);
+    }
+  `}
 `
 
 const SkeletonContainer = styled.div<{
@@ -96,11 +100,11 @@ const SkeletonItem = styled.span<{
   ${props => {
     switch (props.$animation) {
       case "pulse":
-        return `
+        return css`
           animation: ${pulse} 1.5s ease-in-out 0.5s infinite;
         `
       case "wave":
-        return `
+        return css`
           &::after {
             content: "";
             position: absolute;

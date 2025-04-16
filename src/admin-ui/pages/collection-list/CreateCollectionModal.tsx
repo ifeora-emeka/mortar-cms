@@ -12,7 +12,7 @@ import { Input } from "../../components/ui/Input"
 import { TextArea } from "../../components/ui/TextArea"
 import { Button } from "../../components/ui/Button"
 import { FormField } from "../../components/ui/FormField"
-import { LoadingSpinner } from "../../components/ui/LoadingSpinner"
+import { toast } from "../../components/ToastProvider"
 import api from "../../../lib/api"
 import { Text } from "../../components/ui/Text"
 
@@ -65,7 +65,6 @@ export const CreateCollectionModal: React.FC<CreateCollectionModalProps> = ({
   onClose,
   onSubmit
 }) => {
-  const [apiError, setApiError] = useState<string | null>(null);
   const { 
     control, 
     handleSubmit, 
@@ -83,19 +82,40 @@ export const CreateCollectionModal: React.FC<CreateCollectionModalProps> = ({
   })
 
   const handleFormSubmit = async (data: CreateCollectionFormValues) => {
-    setApiError(null);
     try {
       await api.post('/kyper/collections/create', data);
       await onSubmit(data);
+      
+      toast.success({
+        title: "Collection created",
+        description: `Successfully created collection "${data.name}"`,
+        duration: 5000
+      });
+      
       handleClose();
     } catch (error: any) {
       console.error("Failed to create collection:", error);
-      setApiError(
-        error.response?.data?.message || 
-        error.response?.data?.error || 
-        error.message || 
-        'An unexpected error occurred'
-      );
+      
+      // Show error toast
+      const errorMessage = error.response?.data?.message || 
+                          error.response?.data?.error || 
+                          error.message || 
+                          'An unexpected error occurred';
+                          
+      toast.error({
+        title: "Failed to create collection",
+        description: errorMessage,
+        duration: 8000
+      });
+      
+      // Check for duplicate slug error
+      if (error.response?.status === 409) {
+        toast.warning({
+          title: "Duplicate slug detected",
+          description: "Please modify the slug to create this collection",
+          duration: 6000
+        });
+      }
     }
   }
 
@@ -114,7 +134,6 @@ export const CreateCollectionModal: React.FC<CreateCollectionModalProps> = ({
   }, [name, setValue])
 
   const handleClose = () => {
-    setApiError(null);
     reset();
     onClose();
   }
@@ -133,14 +152,6 @@ export const CreateCollectionModal: React.FC<CreateCollectionModalProps> = ({
       />
 
       <Modal.Body>
-        {apiError && (
-          <ErrorMessage>
-            <Text type="p" color="error">
-              {apiError}
-            </Text>
-          </ErrorMessage>
-        )}
-        
         <Form onSubmit={handleSubmit(handleFormSubmit)} noValidate>
           <FormField
             label="Name"
