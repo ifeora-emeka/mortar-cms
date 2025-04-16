@@ -4,6 +4,7 @@ import React from "react"
 import styled from "styled-components"
 import { theme } from "../../../styles/theme"
 import { BorderRadius, Color, ComponentDefaultProps, Shadow, Size, Variant } from "../../../types/components.types"
+import * as Slot from '@radix-ui/react-slot'
 
 interface TextAreaProps extends ComponentDefaultProps {
   placeholder?: string
@@ -19,6 +20,7 @@ interface TextAreaProps extends ComponentDefaultProps {
   "aria-label"?: string
   "aria-describedby"?: string
   error?: boolean
+  asChild?: boolean
 }
 
 const StyledTextArea = styled.textarea<{
@@ -143,12 +145,15 @@ export const TextArea: React.FC<TextAreaProps> = ({
   "aria-label": ariaLabel,
   "aria-describedby": ariaDescribedby,
   error = false,
+  asChild = false,
 }) => {
   // Convert null to empty string to satisfy TypeScript
   const safeValue = value === null ? "" : value;
   
+  const TextAreaComp = asChild ? Slot.Root : StyledTextArea;
+  
   return (
-    <StyledTextArea
+    <TextAreaComp
       placeholder={placeholder}
       value={safeValue}
       onChange={onChange}

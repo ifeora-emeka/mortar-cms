@@ -3,70 +3,85 @@
 import React from "react"
 import styled from "styled-components"
 import { theme } from "../../../styles/theme"
+import { ComponentDefaultProps } from "../../../types/components.types"
 import { Label } from "./Label"
 import { Text } from "./Text"
 
-interface FormFieldProps {
+interface FormFieldProps extends ComponentDefaultProps {
+  id?: string
+  name?: string
   label?: string
-  children: React.ReactNode
-  error?: string
-  description?: string
   required?: boolean
   optional?: boolean
-  className?: string
+  error?: string | boolean
+  helpText?: string
+  children: React.ReactNode
 }
 
 const FormFieldWrapper = styled.div`
-  display: flex;
-  flex-direction: column;
-  width: 100%;
   margin-bottom: ${theme.spacing.md};
 `
 
-const ErrorMessage = styled(Text)`
-  color: ${theme.colors.error};
+const HelpText = styled(Text)<{ $error?: boolean }>`
+  display: block;
   margin-top: ${theme.spacing.xs};
-  font-size: ${theme.fontSizes.sm};
+  color: ${props => props.$error ? theme.colors.error : theme.colors["muted-foreground"]};
 `
 
 export const FormField: React.FC<FormFieldProps> = ({
+  id,
+  name,
   label,
-  children,
-  error,
-  description,
   required = false,
   optional = false,
+  error,
+  helpText,
+  children,
   className,
 }) => {
+  const fieldId = id || name || Math.random().toString(36).substring(2, 9)
+  const errorId = `${fieldId}-error`
+  const helpTextId = `${fieldId}-description`
   const hasError = !!error
-  const id = React.useId()
+  const errorMessage = typeof error === 'string' ? error : undefined
   
   return (
     <FormFieldWrapper className={className}>
       {label && (
         <Label 
-          htmlFor={id} 
+          htmlFor={fieldId}
           required={required} 
           optional={optional}
           error={hasError}
-          description={description}
         >
           {label}
         </Label>
       )}
       
-      {React.isValidElement(children) &&
-        React.cloneElement(
-          children as React.ReactElement<any>, 
-          {
-            id,
-            error: hasError,
-            ...(required ? { required: true } : {}),
-          }
-        )
-      }
+      {React.Children.map(children, child => {
+        if (!React.isValidElement(child)) return child
+        
+        return React.cloneElement(child as React.ReactElement, {
+          id: fieldId,
+          name: name || fieldId,
+          "aria-describedby": helpText ? helpTextId : undefined,
+          "aria-invalid": hasError ? true : undefined,
+          "aria-errormessage": hasError ? errorId : undefined,
+          error: hasError,
+          required,
+          ...child.props
+        })
+      })}
       
-      {hasError && <ErrorMessage type="small">{error}</ErrorMessage>}
+      {(helpText || errorMessage) && (
+        <HelpText 
+          type="small" 
+          id={errorMessage ? errorId : (helpText ? helpTextId : undefined)}
+          $error={hasError}
+        >
+          {errorMessage || helpText}
+        </HelpText>
+      )}
     </FormFieldWrapper>
   )
 }

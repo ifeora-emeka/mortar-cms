@@ -3,8 +3,9 @@
 import React from 'react';
 import styled from 'styled-components';
 import { theme } from '../../../styles/theme';
-import {BorderRadius, Color, ComponentDefaultProps, Shadow, Size, Variant} from "../../../types/components.types";
+import { BorderRadius, Color, ComponentDefaultProps, Shadow, Size, Variant } from "../../../types/components.types";
 import { LoadingSpinner, SpinnerType } from './LoadingSpinner';
+import * as Slot from '@radix-ui/react-slot';
 
 interface ButtonProps extends ComponentDefaultProps {
     children?: React.ReactNode;
@@ -21,6 +22,7 @@ interface ButtonProps extends ComponentDefaultProps {
     loadingText?: string;
     spinnerType?: SpinnerType;
     type?: "button" | "submit" | "reset";
+    asChild?: boolean;
 }
 
 // Styled component with namespace to avoid conflicts
@@ -42,6 +44,8 @@ const StyledButton = styled.button<{
     align-items: center;
     justify-content: center;
     text-align: center;
+    font-weight: 500;
+    position: relative;
     transition: all 0.2s ease;
 
     /* Size variations */
@@ -147,6 +151,7 @@ export const Button: React.FC<ButtonProps> = ({
     loadingText,
     spinnerType = "spinner",
     type = "button",
+    asChild = false,
 }) => {
     // Map button size to spinner size
     const getSpinnerSize = (): "xs" | "sm" | "md" => {
@@ -157,8 +162,10 @@ export const Button: React.FC<ButtonProps> = ({
         }
     };
     
+    const Comp = asChild ? Slot.Root : StyledButton;
+    
     return (
-        <StyledButton
+        <Comp
             $variant={variant}
             $color={color}
             $size={size}
@@ -184,7 +191,7 @@ export const Button: React.FC<ButtonProps> = ({
             ) : (
                 children
             )}
-        </StyledButton>
+        </Comp>
     );
 };
 

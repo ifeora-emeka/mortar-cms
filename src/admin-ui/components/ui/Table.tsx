@@ -1,384 +1,338 @@
 "use client"
 
 import React from "react"
-import styled, { css } from "styled-components"
+import styled from "styled-components"
 import { theme } from "../../../styles/theme"
-import { Color, Size } from "../../../types/components.types"
+import { ComponentDefaultProps } from "../../../types/components.types"
 
-type Align = "left" | "center" | "right"
-type Variant = "default" | "striped" | "outline"
-
-interface TableProps extends React.HTMLAttributes<HTMLTableElement> {
-    variant?: Variant
-    size?: Size
-    fullWidth?: boolean
-    color?: Color
-    borderRadius?: keyof typeof theme.borderRadius
-    shadow?: keyof typeof theme.shadows
+interface TableRootProps extends ComponentDefaultProps {
+  children?: React.ReactNode
+  variant?: "default" | "striped" | "bordered" | "card"
+  compact?: boolean
+  hover?: boolean
+  stickyHeader?: boolean
+  fullWidth?: boolean
 }
 
-interface TableHeaderProps extends React.HTMLAttributes<HTMLTableSectionElement> {}
+interface TableHeadProps extends React.HTMLAttributes<HTMLTableSectionElement> {
+  children?: React.ReactNode
+}
 
-interface TableBodyProps extends React.HTMLAttributes<HTMLTableSectionElement> {}
-
-interface TableFooterProps extends React.HTMLAttributes<HTMLTableSectionElement> {}
+interface TableBodyProps extends React.HTMLAttributes<HTMLTableSectionElement> {
+  children?: React.ReactNode
+}
 
 interface TableRowProps extends React.HTMLAttributes<HTMLTableRowElement> {
-    selected?: boolean
-    interactive?: boolean
+  children?: React.ReactNode
+  selected?: boolean
+  disabled?: boolean
 }
 
-interface TableHeadProps extends React.ThHTMLAttributes<HTMLTableCellElement> {
-    align?: Align
-    sortable?: boolean
-    sorted?: "asc" | "desc" | false
+interface TableHeaderProps extends React.ThHTMLAttributes<HTMLTableHeaderCellElement> {
+  children?: React.ReactNode
+  align?: "left" | "center" | "right"
 }
 
 interface TableCellProps extends React.TdHTMLAttributes<HTMLTableCellElement> {
-    align?: Align
-    truncate?: boolean
+  children?: React.ReactNode
+  align?: "left" | "center" | "right"
+}
+
+interface TableFooterProps extends React.HTMLAttributes<HTMLTableSectionElement> {
+  children?: React.ReactNode
 }
 
 interface TableCaptionProps extends React.HTMLAttributes<HTMLTableCaptionElement> {
-    side?: "top" | "bottom"
-}
-
-interface TableContainerProps extends React.HTMLAttributes<HTMLDivElement> {
-    children: React.ReactNode
+  children?: React.ReactNode
 }
 
 const StyledTable = styled.table<{
-    $variant: Variant
-    $size: Size
-    $fullWidth: boolean
-    $color: Color
-    $borderRadius: keyof typeof theme.borderRadius
-    $shadow: keyof typeof theme.shadows
+  $variant: "default" | "striped" | "bordered" | "card"
+  $compact: boolean
+  $hover: boolean
+  $stickyHeader: boolean
+  $fullWidth: boolean
 }>`
-    border-collapse: separate;
-    border-spacing: 0;
-    width: ${props => props.$fullWidth ? "100%" : "auto"};
-    border-radius: ${props => theme.borderRadius[props.$borderRadius]};
+  border-collapse: separate;
+  border-spacing: 0;
+  width: ${props => props.$fullWidth ? "100%" : "auto"};
+  font-variant-numeric: tabular-nums;
+  
+  ${props => props.$variant === "bordered" && `
+    border: 1px solid ${theme.colors.border};
+  `}
+  
+  ${props => props.$variant === "card" && `
+    background: ${theme.colors.card};
+    border-radius: ${theme.borderRadius.md};
+    box-shadow: ${theme.shadows.sm};
     overflow: hidden;
-    position: relative;
-    box-shadow: ${props => theme.shadows[props.$shadow]};
-
-    ${props => {
-        switch (props.$variant) {
-            case "striped":
-                return css`
-                    border: 1px solid ${theme.colors.border};
-                `
-            case "outline":
-                return css`
-                    border: 1px solid ${theme.colors.border};
-                `
-            default:
-                return css`
-                    border: none;
-                `
-        }
-    }}
-
-    ${props => {
-        switch (props.$size) {
-            case "small":
-                return css`
-                    font-size: ${theme.fontSizes.sm};
-                `
-            case "large":
-                return css`
-                    font-size: ${theme.fontSizes.lg};
-                `
-            default:
-                return css`
-                    font-size: ${theme.fontSizes.md};
-                `
-        }
-    }}
-
-    @media (max-width: ${theme.breakpoints.md}) {
-        display: block;
-    }
+  `}
 `
 
-const StyledTableHeader = styled.thead`
-    background-color: ${theme.colors.accent};
-    border-bottom: 1px solid ${theme.colors.border};
-
-    @media (max-width: ${theme.breakpoints.md}) {
-        display: none;
-    }
+const StyledTableHead = styled.thead`
+  background-color: ${theme.colors.card};
+  font-weight: 600;
+  
+  tr:last-child th {
+    border-bottom: 2px solid ${theme.colors.border};
+  }
 `
 
-const StyledTableBody = styled.tbody`
-    @media (max-width: ${theme.breakpoints.md}) {
-        display: block;
+const StyledTableBody = styled.tbody<{
+  $variant: "default" | "striped" | "bordered" | "card"
+}>`
+  ${props => props.$variant === "striped" && `
+    tr:nth-child(even) {
+      background-color: ${theme.colors.accent};
     }
-`
-
-const StyledTableFooter = styled.tfoot`
-    border-top: 1px solid ${theme.colors.border};
-    background-color: ${theme.colors.muted};
-
-    @media (max-width: ${theme.breakpoints.md}) {
-        display: block;
-    }
+  `}
 `
 
 const StyledTableRow = styled.tr<{
-    $selected?: boolean
-    $interactive?: boolean
-    $variant: Variant
+  $selected?: boolean
+  $disabled?: boolean
+  $variant: "default" | "striped" | "bordered" | "card"
+  $hover: boolean
 }>`
-    border-bottom: 1px solid ${theme.colors.border};
-    transition: background-color 0.2s ease;
-
-    ${props => props.$selected && css`
-        background-color: ${theme.colors.accent};
-    `}
-    
-    ${props => props.$interactive && css`
-        cursor: pointer;
-        &:hover {
-            background-color: ${theme.colors.accent};
-        }
-    `}
-    
-    ${props => props.$variant === "striped" && css`
-        &:nth-child(even) {
-            background-color: ${theme.colors.card};
-        }
-        &:nth-child(odd) {
-            background-color: ${theme.colors.background};
-        }
-    `}
-
-    @media (max-width: ${theme.breakpoints.md}) {
-        display: block;
-        margin-bottom: ${theme.spacing.md};
-        border: 1px solid ${theme.colors.border};
-        border-radius: ${theme.borderRadius.sm};
+  ${props => props.$disabled && `
+    opacity: 0.5;
+    cursor: not-allowed;
+  `}
+  
+  ${props => props.$selected && `
+    background-color: ${theme.colors.accent};
+  `}
+  
+  ${props => props.$hover && `
+    &:hover {
+      background-color: ${theme.colors.accent};
     }
+  `}
 `
 
-const StyledTableHead = styled.th<{
-    $align: Align
-    $sortable?: boolean
-    $sorted?: "asc" | "desc" | false
+const StyledTableHeader = styled.th<{
+  $align: "left" | "center" | "right"
+  $compact: boolean
+  $variant: "default" | "striped" | "bordered" | "card"
 }>`
-    text-align: ${props => props.$align};
-    padding: ${theme.spacing.md};
-    font-weight: 600;
-    color: ${theme.colors.foreground};
-    white-space: nowrap;
-    position: relative;
-    
-    ${props => props.$sortable && css`
-        cursor: pointer;
-        user-select: none;
-        
-        &:hover {
-            background-color: ${theme.colors.accent};
-        }
-        
-        &::after {
-            content: "${props.$sorted === "asc" ? "▲" : props.$sorted === "desc" ? "▼" : ""}";
-            position: absolute;
-            right: ${theme.spacing.md};
-            opacity: ${props.$sorted ? "1" : "0.3"};
-        }
-    `}
+  padding: ${props => props.$compact ? theme.spacing.xs : theme.spacing.sm};
+  text-align: ${props => props.$align};
+  color: ${theme.colors.foreground};
+  font-weight: 600;
+  font-size: ${theme.fontSizes.sm};
+  white-space: nowrap;
+  position: relative;
+  
+  ${props => props.$variant === "bordered" && `
+    border: 1px solid ${theme.colors.border};
+  `}
+  
+  &:first-child {
+    border-top-left-radius: ${props => props.$variant === "card" ? theme.borderRadius.md : '0'};
+  }
+  
+  &:last-child {
+    border-top-right-radius: ${props => props.$variant === "card" ? theme.borderRadius.md : '0'};
+  }
 `
 
 const StyledTableCell = styled.td<{
-    $align: Align
-    $truncate: boolean
+  $align: "left" | "center" | "right"
+  $compact: boolean
+  $variant: "default" | "striped" | "bordered" | "card"
 }>`
-    text-align: ${props => props.$align};
-    padding: ${theme.spacing.md};
-    color: ${theme.colors.foreground};
-    
-    ${props => props.$truncate && css`
-        max-width: 200px;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    `}
-
-    @media (max-width: ${theme.breakpoints.md}) {
-        display: block;
-        text-align: right;
-        padding: ${theme.spacing.sm} ${theme.spacing.md};
-        
-        &::before {
-            content: attr(data-label);
-            float: left;
-            font-weight: 600;
-            color: ${theme.colors["muted-foreground"]};
-        }
-    }
+  padding: ${props => props.$compact ? theme.spacing.xs : theme.spacing.sm};
+  text-align: ${props => props.$align};
+  color: ${theme.colors.foreground};
+  font-size: ${theme.fontSizes.sm};
+  border-bottom: 1px solid ${theme.colors.border};
+  
+  ${props => props.$variant === "bordered" && `
+    border: 1px solid ${theme.colors.border};
+  `}
 `
 
-const StyledTableCaption = styled.caption<{
-    $side: "top" | "bottom"
-}>`
-    caption-side: ${props => props.$side};
-    padding: ${theme.spacing.md};
-    text-align: left;
-    font-size: ${theme.fontSizes.sm};
-    color: ${theme.colors["muted-foreground"]};
-    border-bottom: ${props => props.$side === "top" ? `1px solid ${theme.colors.border}` : "none"};
-    border-top: ${props => props.$side === "bottom" ? `1px solid ${theme.colors.border}` : "none"};
+const StyledTableFooter = styled.tfoot`
+  border-top: 2px solid ${theme.colors.border};
+  background-color: ${theme.colors.card};
+  font-weight: 500;
 `
 
-const StyledTableContainer = styled.div`
-  width: 100%;
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-  
-  &::-webkit-scrollbar {
-    height: 8px;
-  }
-  
-  &::-webkit-scrollbar-track {
-    background: ${theme.colors.background};
-    border-radius: 4px;
-  }
-  
-  &::-webkit-scrollbar-thumb {
-    background: ${theme.colors.muted};
-    border-radius: 4px;
-  }
-  
-  &::-webkit-scrollbar-thumb:hover {
-    background: ${theme.colors["muted-foreground"]};
-  }
+const StyledTableCaption = styled.caption`
+  margin-top: ${theme.spacing.sm};
+  font-size: ${theme.fontSizes.sm};
+  color: ${theme.colors["muted-foreground"]};
+  text-align: left;
 `
 
-export const Table = React.forwardRef<HTMLTableElement, TableProps>(
-    ({
-        children,
-        variant = "default",
-        size = "medium",
-        fullWidth = true,
-        color = "accent",
-        borderRadius = "md",
-        shadow = "sm",
-        className,
-        ...props
-    }, ref) => (
+export const Table = {
+  Root: React.forwardRef<HTMLTableElement, TableRootProps>(({
+    children,
+    variant = "default",
+    compact = false,
+    hover = false,
+    stickyHeader = false,
+    fullWidth = true,
+    className,
+    ...props
+  }, ref) => {
+    return (
+      <div style={{ overflowX: 'auto', width: fullWidth ? '100%' : 'auto' }}>
         <StyledTable
-            ref={ref}
-            $variant={variant}
-            $size={size}
-            $fullWidth={fullWidth}
-            $color={color}
-            $borderRadius={borderRadius}
-            $shadow={shadow}
-            className={className}
-            {...props}
+          ref={ref}
+          $variant={variant}
+          $compact={compact}
+          $hover={hover}
+          $stickyHeader={stickyHeader}
+          $fullWidth={fullWidth}
+          className={className}
+          role="table"
+          {...props}
         >
-            {children}
+          {children}
         </StyledTable>
-    )
-)
+      </div>
+    );
+  }),
+  
+  Head: React.forwardRef<HTMLTableSectionElement, TableHeadProps>(({
+    children,
+    className,
+    ...props
+  }, ref) => {
+    return (
+      <StyledTableHead ref={ref} className={className} {...props}>
+        {children}
+      </StyledTableHead>
+    );
+  }),
+  
+  Body: React.forwardRef<HTMLTableSectionElement, TableBodyProps>(({
+    children,
+    className,
+    ...props
+  }, ref) => {
+    // Get variant from context or parent component
+    const variant = "default";
+    
+    return (
+      <StyledTableBody 
+        ref={ref} 
+        className={className} 
+        $variant={variant as "default" | "striped" | "bordered" | "card"} 
+        {...props}
+      >
+        {children}
+      </StyledTableBody>
+    );
+  }),
+  
+  Row: React.forwardRef<HTMLTableRowElement, TableRowProps>(({
+    children,
+    selected = false,
+    disabled = false,
+    className,
+    ...props
+  }, ref) => {
+    // Get variant and hover from context or parent component
+    const variant = "default";
+    const hover = false;
+    
+    return (
+      <StyledTableRow 
+        ref={ref} 
+        $selected={selected} 
+        $disabled={disabled}
+        $variant={variant as "default" | "striped" | "bordered" | "card"}
+        $hover={hover}
+        className={className}
+        aria-selected={selected}
+        aria-disabled={disabled}
+        {...props}
+      >
+        {children}
+      </StyledTableRow>
+    );
+  }),
+  
+  Header: React.forwardRef<HTMLTableCellElement, TableHeaderProps>(({
+    children,
+    align = "left",
+    className,
+    scope = "col",
+    ...props
+  }, ref) => {
+    // Get variant and compact from context or parent component
+    const variant = "default";
+    const compact = false;
+    
+    return (
+      <StyledTableHeader 
+        ref={ref} 
+        $align={align}
+        $compact={compact}
+        $variant={variant as "default" | "striped" | "bordered" | "card"}
+        className={className}
+        scope={scope}
+        role="columnheader"
+        {...props}
+      >
+        {children}
+      </StyledTableHeader>
+    );
+  }),
+  
+  Cell: React.forwardRef<HTMLTableCellElement, TableCellProps>(({
+    children,
+    align = "left",
+    className,
+    ...props
+  }, ref) => {
+    // Get variant and compact from context or parent component
+    const variant = "default";
+    const compact = false;
+    
+    return (
+      <StyledTableCell 
+        ref={ref} 
+        $align={align}
+        $compact={compact}
+        $variant={variant as "default" | "striped" | "bordered" | "card"}
+        className={className}
+        role="cell"
+        {...props}
+      >
+        {children}
+      </StyledTableCell>
+    );
+  }),
+  
+  Footer: React.forwardRef<HTMLTableSectionElement, TableFooterProps>(({
+    children,
+    className,
+    ...props
+  }, ref) => {
+    return (
+      <StyledTableFooter ref={ref} className={className} {...props}>
+        {children}
+      </StyledTableFooter>
+    );
+  }),
+  
+  Caption: React.forwardRef<HTMLTableCaptionElement, TableCaptionProps>(({
+    children,
+    className,
+    ...props
+  }, ref) => {
+    return (
+      <StyledTableCaption ref={ref} className={className} {...props}>
+        {children}
+      </StyledTableCaption>
+    );
+  }),
+};
 
-export const TableContainer = React.forwardRef<HTMLDivElement, TableContainerProps>(
-    ({ children, className, ...props }, ref) => (
-        <StyledTableContainer ref={ref} className={className} {...props}>
-            {children}
-        </StyledTableContainer>
-    )
-)
-
-export const TableHeader = React.forwardRef<HTMLTableSectionElement, TableHeaderProps>(
-    ({ children, className, ...props }, ref) => (
-        <StyledTableHeader ref={ref} className={className} {...props}>
-            {children}
-        </StyledTableHeader>
-    )
-)
-
-export const TableBody = React.forwardRef<HTMLTableSectionElement, TableBodyProps>(
-    ({ children, className, ...props }, ref) => (
-        <StyledTableBody ref={ref} className={className} {...props}>
-            {children}
-        </StyledTableBody>
-    )
-)
-
-export const TableFooter = React.forwardRef<HTMLTableSectionElement, TableFooterProps>(
-    ({ children, className, ...props }, ref) => (
-        <StyledTableFooter ref={ref} className={className} {...props}>
-            {children}
-        </StyledTableFooter>
-    )
-)
-
-export const TableRow = React.forwardRef<HTMLTableRowElement, TableRowProps>(
-    ({ children, selected, interactive, className, ...props }, ref) => (
-        <StyledTableRow
-            ref={ref}
-            $selected={selected}
-            $interactive={interactive}
-            $variant="default"
-            className={className}
-            {...props}
-        >
-            {children}
-        </StyledTableRow>
-    )
-)
-
-export const TableHead = React.forwardRef<HTMLTableCellElement, TableHeadProps>(
-    ({ children, align = "left", sortable, sorted, className, ...props }, ref) => (
-        <StyledTableHead
-            ref={ref}
-            $align={align}
-            $sortable={sortable}
-            $sorted={sorted}
-            className={className}
-            {...props}
-        >
-            {children}
-        </StyledTableHead>
-    )
-)
-
-export const TableCell = React.forwardRef<HTMLTableCellElement, TableCellProps>(
-    ({ children, align = "left", truncate = false, className, ...props }, ref) => (
-        <StyledTableCell
-            ref={ref}
-            $align={align}
-            $truncate={truncate}
-            className={className}
-            {...props}
-        >
-            {children}
-        </StyledTableCell>
-    )
-)
-
-export const TableCaption = React.forwardRef<HTMLTableCaptionElement, TableCaptionProps>(
-    ({ children, side = "bottom", className, ...props }, ref) => (
-        <StyledTableCaption
-            ref={ref}
-            $side={side}
-            className={className}
-            {...props}
-        >
-            {children}
-        </StyledTableCaption>
-    )
-)
-
-Table.displayName = "Table"
-TableContainer.displayName = "TableContainer"
-TableHeader.displayName = "TableHeader"
-TableBody.displayName = "TableBody"
-TableFooter.displayName = "TableFooter" 
-TableRow.displayName = "TableRow"
-TableHead.displayName = "TableHead"
-TableCell.displayName = "TableCell"
-TableCaption.displayName = "TableCaption"
+Object.assign(Table, {
+  displayName: "Table",
+});

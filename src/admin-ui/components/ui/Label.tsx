@@ -2,52 +2,44 @@
 
 import React from "react"
 import styled from "styled-components"
+import * as LabelPrimitive from "@radix-ui/react-label"
 import { theme } from "../../../styles/theme"
-import { Text } from "./Text"
+import { ComponentDefaultProps } from "../../../types/components.types"
 
-interface LabelProps extends React.LabelHTMLAttributes<HTMLLabelElement> {
+interface LabelProps extends ComponentDefaultProps, React.ComponentPropsWithoutRef<typeof LabelPrimitive.Root> {
   htmlFor?: string
   required?: boolean
   optional?: boolean
+  disabled?: boolean
   error?: boolean
-  description?: string
-  className?: string
 }
 
-const StyledLabel = styled.label<{ $error: boolean }>`
-  display: inline-flex;
-  flex-direction: column;
-  gap: ${theme.spacing.xs};
-  width: 100%;
-  margin-bottom: ${theme.spacing.xs};
-  cursor: pointer;
-`
-
-const LabelText = styled(Text)<{ $error: boolean, $required: boolean }>`
-  display: flex;
-  align-items: center;
-  gap: ${theme.spacing.xs};
-  color: ${props => props.$error ? theme.colors.error : theme.colors.foreground};
-
-  &::after {
-    content: "";
-    display: ${props => props.$required ? "inline-block" : "none"};
-    width: 4px;
-    height: 4px;
-    border-radius: 50%;
-    background-color: ${theme.colors.error};
-    margin-left: 2px;
-  }
-`
-
-const OptionalText = styled(Text)`
-  margin-left: ${theme.spacing.xs};
-  font-size: ${theme.fontSizes.xs};
-`
-
-const DescriptionText = styled(Text)<{ $error: boolean }>`
+const StyledLabel = styled(LabelPrimitive.Root)<{
+  $disabled?: boolean
+  $error?: boolean
+}>`
   font-size: ${theme.fontSizes.sm};
-  color: ${props => props.$error ? theme.colors.error : theme.colors["muted-foreground"]};
+  font-weight: 500;
+  color: ${props => {
+    if (props.$disabled) return theme.colors["muted-foreground"]
+    if (props.$error) return theme.colors.error
+    return theme.colors.foreground
+  }};
+  cursor: ${props => (props.$disabled ? "not-allowed" : "default")};
+  display: block;
+  margin-bottom: ${theme.spacing.xs};
+`
+
+const RequiredIndicator = styled.span`
+  color: ${theme.colors.error};
+  margin-left: ${theme.spacing.xxs};
+`
+
+const OptionalLabel = styled.span`
+  color: ${theme.colors["muted-foreground"]};
+  font-size: ${theme.fontSizes.xs};
+  margin-left: ${theme.spacing.xs};
+  font-weight: normal;
 `
 
 export const Label: React.FC<LabelProps> = ({
@@ -55,31 +47,23 @@ export const Label: React.FC<LabelProps> = ({
   htmlFor,
   required = false,
   optional = false,
+  disabled = false,
   error = false,
-  description,
   className,
   ...props
 }) => {
   return (
-    <StyledLabel htmlFor={htmlFor} className={className} $error={error} {...props}>
-      <LabelText 
-        type="label" 
-        weight="medium" 
-        $error={error}
-        $required={required}
-      >
-        {children}
-        {optional && !required && (
-          <OptionalText type="span" muted>
-            (optional)
-          </OptionalText>
-        )}
-      </LabelText>
-      {description && (
-        <DescriptionText type="small" $error={error}>
-          {description}
-        </DescriptionText>
-      )}
+    <StyledLabel 
+      htmlFor={htmlFor}
+      $disabled={disabled}
+      $error={error}
+      className={className}
+      {...props}
+    >
+      {children}
+      
+      {required && <RequiredIndicator aria-hidden="true">*</RequiredIndicator>}
+      {optional && <OptionalLabel>(optional)</OptionalLabel>}
     </StyledLabel>
   )
 }

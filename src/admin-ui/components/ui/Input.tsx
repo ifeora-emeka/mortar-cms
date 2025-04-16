@@ -3,8 +3,9 @@
 import type React from "react"
 import styled from "styled-components"
 import { theme } from "../../../styles/theme"
-import {LucideIcon} from "lucide-react"
-import {BorderRadius, Color, ComponentDefaultProps, Shadow, Size, Variant} from "../../../types/components.types";
+import { LucideIcon } from "lucide-react"
+import { BorderRadius, Color, ComponentDefaultProps, Shadow, Size, Variant } from "../../../types/components.types"
+import * as Slot from '@radix-ui/react-slot'
 
 interface InputProps extends ComponentDefaultProps {
     placeholder?: string
@@ -18,6 +19,7 @@ interface InputProps extends ComponentDefaultProps {
     required?: boolean
     "aria-label"?: string
     "aria-describedby"?: string
+    asChild?: boolean
 }
 
 const InputWrapper = styled.div<{
@@ -217,12 +219,15 @@ export const Input: React.FC<InputProps> = ({
     required = false,
     "aria-label": ariaLabel,
     "aria-describedby": ariaDescribedby,
+    asChild = false,
 }) => {
     const hasLeftIcon = !!leftIcon;
     const hasRightIcon = !!rightIcon;
     
     const LeftIconComponent = leftIcon;
     const RightIconComponent = rightIcon;
+    
+    const Comp = asChild ? Slot.Root : StyledInput;
     
     return (
         <InputWrapper
@@ -242,7 +247,7 @@ export const Input: React.FC<InputProps> = ({
                 </IconWrapper>
             )}
             
-            <StyledInput
+            <Comp
                 type={type}
                 placeholder={placeholder}
                 value={value}
