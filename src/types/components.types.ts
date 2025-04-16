@@ -15,6 +15,6 @@ export interface ComponentDefaultProps {
 
 export type BorderRadius = 'sm' | 'md' | 'lg' | 'pill' | 'none';
 export type Shadow = 'sm' | 'md' | 'lg' | 'none';
-export type Variant = 'solid' | 'outline' | 'ghost' | 'link' | 'text';
+export type Variant = 'solid' | 'outline' | 'ghost' | 'link' | 'text' | 'destructive';
 export type Size = 'small' | 'medium' | 'large';
 export type Color = 'primary' | 'secondary' | 'accent' | 'success' | 'warning' | 'error';

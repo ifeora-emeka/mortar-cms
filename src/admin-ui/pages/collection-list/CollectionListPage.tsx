@@ -1,7 +1,7 @@
 "use client"
 import React, { useState, useEffect } from "react"
 import styled from "styled-components"
-import { FolderOpen, PlusCircle } from "lucide-react"
+import { FolderOpen, PlusCircle, MoreVertical, Edit, Trash2 } from "lucide-react"
 import { theme } from "../../../styles/theme"
 import { Button } from "../../components/ui/Button"
 import { Text } from "../../components/ui/Text"
@@ -11,6 +11,7 @@ import { MessagePlaceholder } from "../../components/placeholders/MessagePlaceho
 import { TablePlaceholder } from "../../components/placeholders/TablePlaceholder"
 import { ErrorPlaceholder } from "../../components/placeholders/ErrorPlaceholder"
 import { CreateCollectionModal } from "./CreateCollectionModal"
+import { Dropdown } from "../../components/ui/Dropdown"
 import api from "../../../lib/api"
 
 const ActionButton = styled(Button)`
@@ -171,12 +172,28 @@ export const CollectionListPage: React.FC = () => {
                   {formatDate(collection.createdAt)}
                 </TableCell>
                 <TableCell data-label="Actions" align="right">
-                  <Button variant="ghost" color="primary" size="small">
-                    Edit
-                  </Button>
-                  <Button variant="ghost" color="error" size="small">
-                    Delete
-                  </Button>
+                  <Dropdown.Root position="bottom" align="end">
+                    <Dropdown.Trigger>
+                      <Button variant="ghost" size="small">
+                        <MoreVertical size={16} />
+                      </Button>
+                    </Dropdown.Trigger>
+                    <Dropdown.Content>
+                      <Dropdown.Item 
+                        icon={<Edit size={16} />} 
+                        onSelect={() => console.log(`Edit collection: ${collection._id}`)}
+                      >
+                        Edit
+                      </Dropdown.Item>
+                      <Dropdown.Item 
+                        icon={<Trash2 size={16} />} 
+                        onSelect={() => console.log(`Delete collection: ${collection._id}`)}
+                        variant="destructive"
+                      >
+                        Delete
+                      </Dropdown.Item>
+                    </Dropdown.Content>
+                  </Dropdown.Root>
                 </TableCell>
               </TableRow>
             ))}

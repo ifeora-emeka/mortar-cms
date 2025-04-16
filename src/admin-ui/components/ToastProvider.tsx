@@ -30,7 +30,7 @@ export const ToastProvider = ({ children }: { children: React.ReactNode }) => {
     <>
       {children}
       <Toaster
-        position="top-right"
+        position="bottom-left"
         gutter={12}
         containerClassName="toast-container"
         containerStyle={{

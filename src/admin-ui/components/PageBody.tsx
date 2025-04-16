@@ -58,6 +58,8 @@ const HeaderContent = styled.div`
 const HeaderActions = styled.div`
   display: flex;
   gap: ${theme.spacing.md};
+  align-items: center;
+  align-self: center;
   
   @media (max-width: ${theme.breakpoints.sm}) {
     width: 100%;

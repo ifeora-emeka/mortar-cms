@@ -81,6 +81,7 @@ const ToastContainer = styled.div<{ $variant: ToastVariant }>`
   width: 100%;
   max-width: 460px;
   pointer-events: all;
+  z-index: 9000;
 `
 
 const IconWrapper = styled.div<{ $variant: ToastVariant }>`
