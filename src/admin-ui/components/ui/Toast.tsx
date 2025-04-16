@@ -9,6 +9,7 @@ import { ComponentDefaultProps } from "../../../types/components.types"
 
 export type ToastVariant = "success" | "info" | "warning" | "error"
 
+//@ts-ignore
 interface ToastProps extends ComponentDefaultProps {
   title?: string
   description?: string

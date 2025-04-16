@@ -5,6 +5,7 @@ import styled from "styled-components"
 import { theme } from "../../../styles/theme"
 import { ComponentDefaultProps } from "../../../types/components.types"
 
+//@ts-ignore
 interface TableRootProps extends ComponentDefaultProps {
   children?: React.ReactNode
   variant?: "default" | "striped" | "bordered" | "card"

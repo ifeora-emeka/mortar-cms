@@ -1,17 +1,19 @@
 "use client"
 import React, { useState, useEffect } from "react"
 import styled from "styled-components"
-import { FolderOpen, PlusCircle, MoreVertical, Edit, Trash2 } from "lucide-react"
+import { FolderOpen, PlusCircle, MoreVertical, Edit, Trash2, AlertCircle } from "lucide-react"
 import { theme } from "../../../styles/theme"
 import { Button } from "../../components/ui/Button"
 import { Text } from "../../components/ui/Text"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableContainer } from "../../components/ui/Table"
+import { Table } from "../../components/ui/Table"
 import { PageBody } from "../../components/PageBody"
 import { MessagePlaceholder } from "../../components/placeholders/MessagePlaceholder"
 import { TablePlaceholder } from "../../components/placeholders/TablePlaceholder"
 import { ErrorPlaceholder } from "../../components/placeholders/ErrorPlaceholder"
 import { CreateCollectionModal } from "./CreateCollectionModal"
-import { Dropdown } from "../../components/ui/Dropdown"
+import { Dropdown, DropdownTrigger, DropdownContent, DropdownItem } from "../../components/ui/Dropdown"
+import { Modal } from "../../components/ui/Modal"
+import { useToast } from "../../components/ToastProvider"
 import api from "../../../lib/api"
 
 const ActionButton = styled(Button)`
@@ -22,8 +24,9 @@ const ActionButton = styled(Button)`
   }
 `
 
-const StyledTable = styled(Table)`
-  min-width: 600px;
+const StyledTableWrapper = styled.div`
+  width: 100%;
+  overflow-x: auto;
 `
 
 const TruncatedText = styled(Text)`
@@ -33,6 +36,18 @@ const TruncatedText = styled(Text)`
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   max-width: 250px;
+  
+  @media (max-width: ${theme.breakpoints.md}) {
+    max-width: 100%;
+  }
+`
+
+const ConfirmationModalContent = styled.div`
+  padding: ${theme.spacing.md} 0;
+`
+
+const WarningText = styled(Text)`
+  margin-top: ${theme.spacing.sm};
 `
 
 interface Collection {
@@ -44,11 +59,81 @@ interface Collection {
   updatedAt: string;
 }
 
+interface DeleteModalProps {
+  isOpen: boolean;
+  collection: Collection | null;
+  onClose: () => void;
+  onConfirm: () => Promise<void>;
+  isDeleting: boolean;
+}
+
+const DeleteConfirmationModal: React.FC<DeleteModalProps> = ({
+  isOpen,
+  collection,
+  onClose,
+  onConfirm,
+  isDeleting
+}) => {
+  if (!collection) return null;
+  
+  return (
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      size="sm"
+      position="center"
+    >
+      <Modal.Header
+        heading="Delete Collection"
+        subheading="This action cannot be undone"
+        onClose={onClose}
+      />
+      
+      <Modal.Body>
+        <ConfirmationModalContent>
+          <Text type="p">
+            Are you sure you want to delete the collection <strong>{collection.name}</strong>?
+          </Text>
+          <WarningText type="small" muted>
+            This will permanently remove all content and settings associated with this collection.
+          </WarningText>
+        </ConfirmationModalContent>
+      </Modal.Body>
+      
+      <Modal.Footer>
+        <Button
+          variant="ghost"
+          onClick={onClose}
+          disabled={isDeleting}
+        >
+          Cancel
+        </Button>
+        <Button
+          variant="solid"
+          color="error"
+          onClick={onConfirm}
+          disabled={isDeleting}
+          loading={isDeleting}
+          loadingText="Deleting..."
+          spinnerType="spinner"
+        >
+          Delete Collection
+        </Button>
+      </Modal.Footer>
+    </Modal>
+  );
+};
+
 export const CollectionListPage: React.FC = () => {
+  const { toast } = useToast()
   const [collections, setCollections] = useState<Collection[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false)
+  const [selectedCollection, setSelectedCollection] = useState<Collection | null>(null)
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
 
   useEffect(() => {
     fetchCollections()
@@ -68,6 +153,12 @@ export const CollectionListPage: React.FC = () => {
     } catch (err: any) {
       console.error('Error fetching collections:', err)
       setError(err.response?.data?.message || err.message || 'Failed to load collections')
+      
+      toast({
+        title: "Error loading collections",
+        description: err.response?.data?.message || err.message || 'Failed to load collections',
+        duration: 5000
+      })
     } finally {
       setIsLoading(false)
     }
@@ -85,11 +176,70 @@ export const CollectionListPage: React.FC = () => {
     setIsModalOpen(true)
   }
   
+  const handleEditCollection = (collection: Collection) => {
+    setSelectedCollection(collection)
+    // For now we'll just log since we don't have the edit modal yet
+    console.log(`Edit collection: ${collection._id}`)
+    toast({
+      title: "Edit functionality",
+      description: "Edit functionality will be implemented in a future update",
+      duration: 5000
+    })
+  }
+  
+  const handleDeleteClick = (collection: Collection) => {
+    setSelectedCollection(collection)
+    setIsDeleteModalOpen(true)
+  }
+  
+  const handleDeleteConfirm = async () => {
+    if (!selectedCollection) return
+    
+    setIsDeleting(true)
+    try {
+      // In a real app, you would call an API endpoint like:
+      // await api.delete(`/kyper/collections/${selectedCollection._id}`)
+      console.log(`Deleting collection: ${selectedCollection._id}`)
+      
+      // For now we'll simulate the deletion by removing it from state
+      setCollections(collections.filter(c => c._id !== selectedCollection._id))
+      
+      toast({
+        title: "Collection deleted",
+        description: `Successfully deleted collection "${selectedCollection.name}"`,
+        duration: 5000
+      })
+      
+      setIsDeleteModalOpen(false)
+      setSelectedCollection(null)
+    } catch (err: any) {
+      console.error('Error deleting collection:', err)
+      
+      toast({
+        title: "Error deleting collection",
+        description: err.response?.data?.message || err.message || 'Failed to delete collection',
+        duration: 5000
+      })
+    } finally {
+      setIsDeleting(false)
+    }
+  }
+  
   const handleSubmitCollection = async (data: any) => {
     try {
+      toast({
+        title: "Collection created",
+        description: `Successfully created collection "${data.name}"`,
+        duration: 5000
+      })
       await fetchCollections()
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error refreshing collections:', error)
+      toast({
+        title: "Error refreshing collections",
+        description: error.message || 'Failed to refresh collections list',
+        duration: 5000
+      })
     }
   }
 
@@ -135,31 +285,31 @@ export const CollectionListPage: React.FC = () => {
     }
 
     return (
-      <TableContainer>
-        <StyledTable variant="striped" size="medium" shadow="sm">
-          <TableHeader>
-            <TableRow>
-              <TableHead>Name</TableHead>
-              <TableHead>Slug</TableHead>
-              <TableHead>Description</TableHead>
-              <TableHead>Created</TableHead>
-              <TableHead align="right">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
+      <StyledTableWrapper>
+        <Table.Root variant="striped" size="medium" hover={true} fullWidth={true}>
+          <Table.Head>
+            <Table.Row>
+              <Table.Header>Name</Table.Header>
+              <Table.Header>Slug</Table.Header>
+              <Table.Header>Description</Table.Header>
+              <Table.Header>Created</Table.Header>
+              <Table.Header align="right">Actions</Table.Header>
+            </Table.Row>
+          </Table.Head>
+          <Table.Body>
             {collections.map((collection) => (
-              <TableRow key={collection._id} interactive>
-                <TableCell data-label="Name">
+              <Table.Row key={collection._id}>
+                <Table.Cell data-label="Name">
                   <Text type="p" weight="medium">
                     {collection.name}
                   </Text>
-                </TableCell>
-                <TableCell data-label="Slug">
+                </Table.Cell>
+                <Table.Cell data-label="Slug">
                   <Text type="p" muted>
                     {collection.slug}
                   </Text>
-                </TableCell>
-                <TableCell data-label="Description">
+                </Table.Cell>
+                <Table.Cell data-label="Description">
                   {collection.description ? (
                     <TruncatedText type="p" muted>
                       {collection.description}
@@ -167,39 +317,34 @@ export const CollectionListPage: React.FC = () => {
                   ) : (
                     <Text type="p" muted>--</Text>
                   )}
-                </TableCell>
-                <TableCell data-label="Created">
+                </Table.Cell>
+                <Table.Cell data-label="Created">
                   {formatDate(collection.createdAt)}
-                </TableCell>
-                <TableCell data-label="Actions" align="right">
-                  <Dropdown.Root position="bottom" align="end">
-                    <Dropdown.Trigger>
+                </Table.Cell>
+                <Table.Cell data-label="Actions" align="right">
+                  <Dropdown>
+                    <DropdownTrigger>
                       <Button variant="ghost" size="small">
                         <MoreVertical size={16} />
                       </Button>
-                    </Dropdown.Trigger>
-                    <Dropdown.Content>
-                      <Dropdown.Item 
-                        icon={<Edit size={16} />} 
-                        onSelect={() => console.log(`Edit collection: ${collection._id}`)}
-                      >
-                        Edit
-                      </Dropdown.Item>
-                      <Dropdown.Item 
-                        icon={<Trash2 size={16} />} 
-                        onSelect={() => console.log(`Delete collection: ${collection._id}`)}
-                        variant="destructive"
-                      >
-                        Delete
-                      </Dropdown.Item>
-                    </Dropdown.Content>
-                  </Dropdown.Root>
-                </TableCell>
-              </TableRow>
+                    </DropdownTrigger>
+                    <DropdownContent>
+                      <DropdownItem onSelect={() => handleEditCollection(collection)}>
+                        <Edit size={16} /> 
+                        <span style={{ marginLeft: theme.spacing.sm }}>Edit</span>
+                      </DropdownItem>
+                      <DropdownItem onSelect={() => handleDeleteClick(collection)}>
+                        <Trash2 size={16} color={theme.colors.error} /> 
+                        <span style={{ marginLeft: theme.spacing.sm, color: theme.colors.error }}>Delete</span>
+                      </DropdownItem>
+                    </DropdownContent>
+                  </Dropdown>
+                </Table.Cell>
+              </Table.Row>
             ))}
-          </TableBody>
-        </StyledTable>
-      </TableContainer>
+          </Table.Body>
+        </Table.Root>
+      </StyledTableWrapper>
     )
   }
 
@@ -225,6 +370,14 @@ export const CollectionListPage: React.FC = () => {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onSubmit={handleSubmitCollection}
+      />
+      
+      <DeleteConfirmationModal
+        isOpen={isDeleteModalOpen}
+        collection={selectedCollection}
+        onClose={() => setIsDeleteModalOpen(false)}
+        onConfirm={handleDeleteConfirm}
+        isDeleting={isDeleting}
       />
     </PageBody>
   )

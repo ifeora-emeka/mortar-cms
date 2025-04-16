@@ -15,11 +15,13 @@ interface FormFieldProps extends ComponentDefaultProps {
   optional?: boolean
   error?: string | boolean
   helpText?: string
+  description?: string
   children: React.ReactNode
 }
 
 const FormFieldWrapper = styled.div`
   margin-bottom: ${theme.spacing.md};
+  width: 100%;
 `
 
 const HelpText = styled(Text)<{ $error?: boolean }>`
@@ -36,6 +38,7 @@ export const FormField: React.FC<FormFieldProps> = ({
   optional = false,
   error,
   helpText,
+  description,
   children,
   className,
 }) => {
@@ -56,6 +59,15 @@ export const FormField: React.FC<FormFieldProps> = ({
         >
           {label}
         </Label>
+      )}
+      
+      {description && (
+        <HelpText 
+          type="small"
+          as="div"
+        >
+          {description}
+        </HelpText>
       )}
       
       {React.Children.map(children, child => {

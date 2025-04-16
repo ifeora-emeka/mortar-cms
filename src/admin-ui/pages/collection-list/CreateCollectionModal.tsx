@@ -12,7 +12,7 @@ import { Input } from "../../components/ui/Input"
 import { TextArea } from "../../components/ui/TextArea"
 import { Button } from "../../components/ui/Button"
 import { FormField } from "../../components/ui/FormField"
-import { toast } from "../../components/ToastProvider"
+import { useToast } from "../../components/ToastProvider"
 import api from "../../../lib/api"
 import { Text } from "../../components/ui/Text"
 
@@ -65,6 +65,7 @@ export const CreateCollectionModal: React.FC<CreateCollectionModalProps> = ({
     onClose,
     onSubmit
 }) => {
+    const { toast } = useToast()
     const {
         control,
         handleSubmit,
@@ -86,7 +87,7 @@ export const CreateCollectionModal: React.FC<CreateCollectionModalProps> = ({
             await api.post('/kyper/collections/create', data);
             await onSubmit(data);
 
-            toast.success({
+            toast({
                 title: "Collection created",
                 description: `Successfully created collection "${data.name}"`,
                 duration: 5000
@@ -102,7 +103,7 @@ export const CreateCollectionModal: React.FC<CreateCollectionModalProps> = ({
                 error.message ||
                 'An unexpected error occurred';
 
-            toast.error({
+            toast({
                 title: "Failed to create collection",
                 description: errorMessage,
                 duration: 8000
@@ -110,7 +111,7 @@ export const CreateCollectionModal: React.FC<CreateCollectionModalProps> = ({
 
             // Check for duplicate slug error
             if (error.response?.status === 409) {
-                toast.warning({
+                toast({
                     title: "Duplicate slug detected",
                     description: "Please modify the slug to create this collection",
                     duration: 6000

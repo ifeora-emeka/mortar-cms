@@ -1,7 +1,7 @@
 "use client"
 
 import React from "react"
-import styled, { keyframes } from "styled-components"
+import styled, { keyframes, css } from "styled-components"
 import { theme } from "../../../styles/theme"
 import { BorderRadius, ComponentDefaultProps } from "../../../types/components.types"
 
@@ -69,9 +69,9 @@ const StyledSkeleton = styled.div<{
   ${props => {
     switch (props.$animation) {
       case "pulse":
-        return `animation: ${pulse} 1.5s ease-in-out infinite;`;
+        return css`animation: ${pulse} 1.5s ease-in-out infinite;`;
       case "wave":
-        return `
+        return css`
           background: linear-gradient(
             90deg,
             ${theme.colors.muted} 25%,
@@ -90,7 +90,7 @@ const StyledSkeleton = styled.div<{
   /* For text variant, we can add a subtle gradient to make it look more like text */
   ${props =>
     props.$variant === "text" &&
-    `
+    css`
       margin-top: 0;
       margin-bottom: 0;
       display: inline-block;

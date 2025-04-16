@@ -34,7 +34,7 @@ const InputWrapper = styled.div<{
 }>`
   position: relative;
   display: inline-flex;
-  width: ${(props) => (props.$fullWidth ? "100%" : "auto")};
+  width: 100%;
 `
 
 const StyledInput = styled.input<{

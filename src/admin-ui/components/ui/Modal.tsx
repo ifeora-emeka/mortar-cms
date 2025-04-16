@@ -1,12 +1,13 @@
 "use client"
 
-import React, { useEffect } from "react"
-import styled, { keyframes } from "styled-components"
+import React, { Fragment, useEffect, useRef, useState } from "react"
+import { createPortal } from "react-dom"
+import styled, { css, keyframes } from "styled-components"
 import { X } from "lucide-react"
 import { theme } from "../../../styles/theme"
 import { Button } from "./Button"
 import { Text } from "./Text"
-import * as DialogPrimitive from '@radix-ui/react-dialog'
+import FocusTrap from "./utils/focus-trap"
 
 type ModalSize = "sm" | "md" | "lg" | "xl" | "full"
 type ModalPosition = "center" | "top" | "right" | "bottom" | "left"
@@ -45,7 +46,6 @@ interface ModalFooterProps {
   align?: "left" | "center" | "right" | "between" | "around"
 }
 
-// Animation keyframes
 const fadeIn = keyframes`
   from {
     opacity: 0;
@@ -158,77 +158,111 @@ const slideOutToTop = keyframes`
   }
 `
 
-// Helper to get modal size styles
+const ModalOverlay = styled.div<{ $isOpen: boolean }>`
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(2px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  animation: ${props => props.$isOpen ? fadeIn : fadeOut} 0.2s ease-in-out forwards;
+`
+
 const getModalSizeStyles = (size: ModalSize) => {
   switch (size) {
     case "sm":
-      return `width: 400px; max-width: calc(100vw - 32px);`
+      return css`
+        width: 400px;
+        max-width: 90vw;
+      `
     case "md":
-      return `width: 600px; max-width: calc(100vw - 32px);`
+      return css`
+        width: 600px;
+        max-width: 90vw;
+      `
     case "lg":
-      return `width: 800px; max-width: calc(100vw - 32px);`
+      return css`
+        width: 800px;
+        max-width: 90vw;
+      `
     case "xl":
-      return `width: 1000px; max-width: calc(100vw - 32px);`
+      return css`
+        width: 1000px;
+        max-width: 90vw;
+      `
     case "full":
-      return `width: calc(100vw - 32px); height: calc(100vh - 32px);`
+      return css`
+        width: 90vw;
+        height: 90vh;
+      `
+    default:
+      return ""
   }
 }
 
-// Helper to get modal position styles
 const getModalPositionStyles = (position: ModalPosition) => {
   switch (position) {
+    case "center":
+      return css`
+        position: relative;
+        margin: auto;
+      `
     case "top":
-      return `
+      return css`
         position: fixed;
-        top: 16px;
-        left: 50%;
-        transform: translateX(-50%);
-        margin-bottom: 16px;
+        top: 0;
+        left: 0;
+        right: 0;
+        margin: 0 auto;
+        border-top-left-radius: 0;
+        border-top-right-radius: 0;
       `
     case "right":
-      return `
+      return css`
         position: fixed;
         top: 0;
         right: 0;
         bottom: 0;
-        width: 400px;
-        max-width: 100vw;
-        border-radius: ${theme.borderRadius.md} 0 0 ${theme.borderRadius.md};
         height: 100vh;
+        margin: 0;
+        border-top-right-radius: 0;
+        border-bottom-right-radius: 0;
       `
     case "bottom":
-      return `
+      return css`
         position: fixed;
-        bottom: 16px;
-        left: 50%;
-        transform: translateX(-50%);
-        margin-top: 16px;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        margin: 0 auto;
+        border-bottom-left-radius: 0;
+        border-bottom-right-radius: 0;
       `
     case "left":
-      return `
+      return css`
         position: fixed;
         top: 0;
         left: 0;
         bottom: 0;
-        width: 400px;
-        max-width: 100vw;
-        border-radius: 0 ${theme.borderRadius.md} ${theme.borderRadius.md} 0;
         height: 100vh;
+        margin: 0;
+        border-top-left-radius: 0;
+        border-bottom-left-radius: 0;
       `
-    case "center":
     default:
-      return `
-        position: fixed;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-      `
+      return ""
   }
 }
 
-// Helper to determine which animation to use based on position and open state
 const getModalAnimation = (position: ModalPosition, isOpen: boolean) => {
   switch (position) {
+    case "center":
+      return isOpen ? slideIn : slideOut
     case "top":
       return isOpen ? slideInFromTop : slideOutToTop
     case "right":
@@ -242,24 +276,10 @@ const getModalAnimation = (position: ModalPosition, isOpen: boolean) => {
   }
 }
 
-const StyledOverlay = styled(DialogPrimitive.Overlay)`
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.6);
-  z-index: 999;
-  animation: ${fadeIn} 0.2s ease-out;
-  
-  &[data-state="closed"] {
-    animation: ${fadeOut} 0.2s ease-in;
-  }
-`
-
-const StyledModalContainer = styled(DialogPrimitive.Content)<{
+const ModalContainer = styled.div<{
   $size: ModalSize
   $position: ModalPosition
+  $isOpen: boolean
 }>`
   background: ${theme.colors.card};
   color: ${theme.colors.foreground};
@@ -271,16 +291,8 @@ const StyledModalContainer = styled(DialogPrimitive.Content)<{
   ${props => getModalSizeStyles(props.$size)}
   ${props => getModalPositionStyles(props.$position)}
   overflow: hidden;
+  animation: ${props => getModalAnimation(props.$position, props.$isOpen)} 0.3s ease-in-out forwards;
   border: 1px solid ${theme.colors.border};
-  z-index: 1000;
-  
-  &[data-state="open"] {
-    animation: ${props => getModalAnimation(props.$position, true)} 0.3s ease-in-out forwards;
-  }
-  
-  &[data-state="closed"] {
-    animation: ${props => getModalAnimation(props.$position, false)} 0.3s ease-in-out forwards;
-  }
 `
 
 const StyledModalHeader = styled.div`
@@ -344,17 +356,17 @@ const StyledModalFooter = styled.div<{
   ${props => {
     switch (props.$align) {
       case "left":
-        return `justify-content: flex-start;`
+        return css`justify-content: flex-start;`
       case "center":
-        return `justify-content: center;`
+        return css`justify-content: center;`
       case "right":
-        return `justify-content: flex-end;`
+        return css`justify-content: flex-end;`
       case "between":
-        return `justify-content: space-between;`
+        return css`justify-content: space-between;`
       case "around":
-        return `justify-content: space-around;`
+        return css`justify-content: space-around;`
       default:
-        return `justify-content: flex-end;`
+        return css`justify-content: flex-end;`
     }
   }}
   
@@ -375,37 +387,85 @@ export function Modal({
   showCloseButton = true,
   preventScroll = true,
 }: ModalProps) {
-  // Handle scroll locking
+  const [isMounted, setIsMounted] = useState(false)
+  const [isAnimatingOut, setIsAnimatingOut] = useState(false)
+  const modalRef = useRef<HTMLDivElement>(null)
+
   useEffect(() => {
-    if (preventScroll && isOpen) {
-      const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth
-      document.body.style.overflow = "hidden"
-      document.body.style.paddingRight = `${scrollbarWidth}px`
+    setIsMounted(true)
+    return () => setIsMounted(false)
+  }, [])
+
+  useEffect(() => {
+    const handleEsc = (event: KeyboardEvent) => {
+      if (isOpen && closeOnEsc && event.key === "Escape") {
+        handleClose()
+      }
+    }
+
+    if (isOpen) {
+      document.addEventListener("keydown", handleEsc)
       
-      return () => {
+      if (preventScroll) {
+        const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth
+        document.body.style.overflow = "hidden"
+        document.body.style.paddingRight = `${scrollbarWidth}px`
+      }
+    }
+
+    return () => {
+      document.removeEventListener("keydown", handleEsc)
+      
+      if (preventScroll) {
         document.body.style.overflow = ""
         document.body.style.paddingRight = ""
       }
     }
-    return undefined
-  }, [isOpen, preventScroll])
-  
-  return (
-    <DialogPrimitive.Root open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogPrimitive.Portal>
-        <StyledOverlay onClick={closeOnOverlayClick ? onClose : undefined} />
-        <StyledModalContainer
-          className={className}
-          $size={size}
-          $position={position}
-          onEscapeKeyDown={closeOnEsc ? onClose : undefined}
-          onInteractOutside={closeOnOverlayClick ? onClose : undefined}
-        >
-          {children}
-        </StyledModalContainer>
-      </DialogPrimitive.Portal>
-    </DialogPrimitive.Root>
-  )
+  }, [isOpen, closeOnEsc, preventScroll])
+
+  const handleClose = () => {
+    setIsAnimatingOut(true)
+    const animationDuration = position === "center" ? 200 : 300
+    
+    setTimeout(() => {
+      onClose()
+      setIsAnimatingOut(false)
+    }, animationDuration)
+  }
+
+  const handleOverlayClick = (event: React.MouseEvent) => {
+    if (closeOnOverlayClick && event.target === event.currentTarget) {
+      handleClose()
+    }
+  }
+
+  if (!isMounted) return null
+
+  return isOpen ? createPortal(
+    <Fragment>
+      <ModalOverlay
+        data-testid="modal-overlay"
+        onClick={handleOverlayClick}
+        $isOpen={!isAnimatingOut}
+      >
+        <FocusTrap active={isOpen}>
+          <ModalContainer
+            ref={modalRef}
+            role="dialog"
+            aria-modal="true"
+            $size={size}
+            $position={position}
+            $isOpen={!isAnimatingOut}
+            className={className}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {children}
+          </ModalContainer>
+        </FocusTrap>
+      </ModalOverlay>
+    </Fragment>,
+    document.body
+  ) : null
 }
 
 export function ModalHeader({
@@ -417,8 +477,8 @@ export function ModalHeader({
 }: ModalHeaderProps) {
   return (
     <StyledModalHeader className={className}>
-      {typeof heading === 'string' ? (
-        <Text type="h4" weight="semibold">
+      {typeof heading === "string" ? (
+        <Text type="h3" weight="semibold">
           {heading}
         </Text>
       ) : (
@@ -426,7 +486,7 @@ export function ModalHeader({
       )}
       
       {subheading && (
-        typeof subheading === 'string' ? (
+        typeof subheading === "string" ? (
           <Text type="p" muted>
             {subheading}
           </Text>
@@ -436,8 +496,14 @@ export function ModalHeader({
       )}
       
       {showCloseButton && onClose && (
-        <CloseButton variant="ghost" size="small" onClick={onClose} aria-label="Close">
-          <X size={16} />
+        <CloseButton
+          variant="ghost"
+          size="small"
+          color="accent"
+          onClick={onClose}
+          aria-label="Close modal"
+        >
+          <X size={18} />
         </CloseButton>
       )}
     </StyledModalHeader>
