@@ -6,9 +6,10 @@ import { theme } from "../../../styles/theme"
 import { BorderRadius, Color, ComponentDefaultProps, Shadow, Size, Variant } from "../../../types/components.types"
 import * as Slot from '@radix-ui/react-slot'
 
+//@ts-ignore
 interface TextAreaProps extends ComponentDefaultProps {
   placeholder?: string
-  value?: string | null  // Updated to accept null
+  value?: string | null
   onChange?: (e: React.ChangeEvent<HTMLTextAreaElement>) => void
   name?: string
   id?: string
@@ -21,6 +22,8 @@ interface TextAreaProps extends ComponentDefaultProps {
   "aria-describedby"?: string
   error?: boolean
   asChild?: boolean
+  onClick?: (e: React.MouseEvent<HTMLTextAreaElement>) => void
+  onFocus?: (e: React.FocusEvent<HTMLTextAreaElement>) => void
 }
 
 const StyledTextArea = styled.textarea<{
@@ -41,18 +44,22 @@ const StyledTextArea = styled.textarea<{
   max-height: ${props => props.$maxHeight || "none"};
   resize: vertical;
   transition: all 0.2s ease;
-  border-color: ${props => props.$error ? theme.colors.error : theme.colors.border};
+  border-color: ${theme.colors.border};
   
   padding: ${props => 
-    props.$size === "small" ? theme.spacing.sm :
-    props.$size === "medium" ? theme.spacing.md :
-    theme.spacing.lg
+    props.$size === "small" 
+      ? theme.spacing.sm
+      : props.$size === "medium"
+        ? theme.spacing.md
+        : theme.spacing.lg
   };
   
   font-size: ${props => 
-    props.$size === "small" ? theme.fontSizes.sm : 
-    props.$size === "medium" ? theme.fontSizes.md : 
-    theme.fontSizes.lg
+    props.$size === "small" 
+      ? theme.fontSizes.sm 
+      : props.$size === "medium" 
+        ? theme.fontSizes.md 
+        : theme.fontSizes.lg
   };
   
   border-radius: ${props => {
@@ -62,14 +69,14 @@ const StyledTextArea = styled.textarea<{
   
   box-shadow: ${props => props.$shadow !== 'none' ? theme.shadows[props.$shadow] : 'none'};
   
-  ${props => {
+  ${(props) => {
     const baseColor = theme.colors[props.$color];
     
     switch (props.$variant) {
       case "solid":
         return `
           border: 1px solid ${props.$error ? theme.colors.error : theme.colors.border};
-          background-color: ${props.$error ? `${theme.colors.error}10` : `${baseColor}1a`};
+          background-color: ${baseColor}1a;
           color: ${theme.colors.foreground};
           &:hover { background-color: ${baseColor}33; }
           &:focus { 
@@ -146,17 +153,36 @@ export const TextArea: React.FC<TextAreaProps> = ({
   "aria-describedby": ariaDescribedby,
   error = false,
   asChild = false,
+  onClick,
+  onFocus,
 }) => {
   // Convert null to empty string to satisfy TypeScript
   const safeValue = value === null ? "" : value;
   
   const TextAreaComp = asChild ? Slot.Root : StyledTextArea;
   
+  const handleTextAreaClick = (e: React.MouseEvent<HTMLTextAreaElement>) => {
+    e.stopPropagation();
+    if (onClick) onClick(e);
+  };
+  
+  const handleTextAreaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    e.stopPropagation();
+    if (onChange) onChange(e);
+  };
+  
+  const handleTextAreaFocus = (e: React.FocusEvent<HTMLTextAreaElement>) => {
+    e.stopPropagation();
+    if (onFocus) onFocus(e);
+  };
+  
   return (
     <TextAreaComp
       placeholder={placeholder}
       value={safeValue}
-      onChange={onChange}
+      onChange={handleTextAreaChange}
+      onClick={handleTextAreaClick}
+      onFocus={handleTextAreaFocus}
       rows={rows}
       name={name}
       id={id}

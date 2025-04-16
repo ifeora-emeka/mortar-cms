@@ -7,6 +7,7 @@ import { LucideIcon } from "lucide-react"
 import { BorderRadius, Color, ComponentDefaultProps, Shadow, Size, Variant } from "../../../types/components.types"
 import * as Slot from '@radix-ui/react-slot'
 
+//@ts-ignore
 interface InputProps extends ComponentDefaultProps {
     placeholder?: string
     value?: string
@@ -21,6 +22,9 @@ interface InputProps extends ComponentDefaultProps {
     "aria-label"?: string
     "aria-describedby"?: string
     asChild?: boolean
+    onClick?: (e: React.MouseEvent<HTMLInputElement>) => void
+    onFocus?: (e: React.FocusEvent<HTMLInputElement>) => void
+    autoComplete?: string
 }
 
 const InputWrapper = styled.div<{
@@ -35,7 +39,7 @@ const InputWrapper = styled.div<{
 }>`
   position: relative;
   display: inline-flex;
-  width: 100%;
+  width: ${props => props.$fullWidth ? '100%' : 'auto'};
 `
 
 const StyledInput = styled.input<{
@@ -208,7 +212,7 @@ export const Input: React.FC<InputProps> = ({
     variant = "outline",
     color = "primary",
     size = "medium",
-    fullWidth = false,
+    fullWidth = true,
     disabled = false,
     borderRadius = "md",
     shadow = "none",
@@ -222,6 +226,9 @@ export const Input: React.FC<InputProps> = ({
     "aria-label": ariaLabel,
     "aria-describedby": ariaDescribedby,
     asChild = false,
+    onClick,
+    onFocus,
+    autoComplete,
 }) => {
     const hasLeftIcon = !!leftIcon;
     const hasRightIcon = !!rightIcon;
@@ -230,6 +237,21 @@ export const Input: React.FC<InputProps> = ({
     const RightIconComponent = rightIcon;
     
     const Comp = asChild ? Slot.Root : StyledInput;
+    
+    const handleInputClick = (e: React.MouseEvent<HTMLInputElement>) => {
+        e.stopPropagation();
+        if (onClick) onClick(e);
+    };
+    
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        e.stopPropagation();
+        if (onChange) onChange(e);
+    };
+    
+    const handleInputFocus = (e: React.FocusEvent<HTMLInputElement>) => {
+        e.stopPropagation();
+        if (onFocus) onFocus(e);
+    };
     
     return (
         <InputWrapper
@@ -242,6 +264,7 @@ export const Input: React.FC<InputProps> = ({
             $hasRightIcon={hasRightIcon}
             $borderRadius={borderRadius}
             $shadow={shadow}
+            onClick={e => e.stopPropagation()}
         >
             {hasLeftIcon && LeftIconComponent && (
                 <IconWrapper $position="left" $size={size} $color={color}>
@@ -253,7 +276,9 @@ export const Input: React.FC<InputProps> = ({
                 type={type}
                 placeholder={placeholder}
                 value={value}
-                onChange={onChange}
+                onChange={handleInputChange}
+                onClick={handleInputClick}
+                onFocus={handleInputFocus}
                 disabled={disabled}
                 readOnly={readOnly}
                 name={name}
@@ -261,6 +286,7 @@ export const Input: React.FC<InputProps> = ({
                 required={required}
                 aria-label={ariaLabel}
                 aria-describedby={ariaDescribedby}
+                autoComplete={autoComplete}
                 $variant={variant}
                 $color={color}
                 $size={size}

@@ -1,7 +1,6 @@
 "use client"
 
 import React, { useEffect, useState } from "react"
-import { useForm, Controller } from "react-hook-form"
 import slugify from "slugify"
 import styled from "styled-components"
 import { theme } from "../../../styles/theme"
@@ -71,38 +70,46 @@ export const CreateCollectionModal: React.FC<CreateCollectionModalProps> = ({
     onSubmit
 }) => {
     const { toast } = useToast()
-    const {
-        control,
-        handleSubmit,
-        formState: { isSubmitting },
-        watch,
-        setValue,
-        getValues,
-        reset
-    } = useForm<CreateCollectionFormValues>({
-        defaultValues: {
-            name: "",
-            slug: "",
-            description: ""
-        }
+    const [isSubmitting, setIsSubmitting] = useState(false)
+    const [formValues, setFormValues] = useState<CreateCollectionFormValues>({
+        name: "",
+        slug: "",
+        description: ""
     })
-
-    const name = watch("name")
+    
     useEffect(() => {
-        if (name) {
-            const generatedSlug = slugify(name, {
+        if (formValues.name) {
+            const generatedSlug = slugify(formValues.name, {
                 lower: true,
                 strict: true,
                 trim: true
             });
-            setValue("slug", generatedSlug);
+            setFormValues(prev => ({
+                ...prev,
+                slug: generatedSlug
+            }));
         } else {
-            setValue("slug", "");
+            setFormValues(prev => ({
+                ...prev,
+                slug: ""
+            }));
         }
-    }, [name, setValue])
+    }, [formValues.name])
 
-    const handleFormSubmit = async (data: CreateCollectionFormValues) => {
-        if (!data.name || !data.slug) {
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+        const { name, value } = e.target;
+        setFormValues(prev => ({
+            ...prev,
+            [name]: value
+        }));
+    }
+
+    const handleFormSubmit = async (e?: React.FormEvent | React.MouseEvent) => {
+        if (e) {
+            e.preventDefault();
+        }
+        
+        if (!formValues.name || !formValues.slug) {
             toast({
                 title: "Validation Error",
                 description: "Name and slug are required fields",
@@ -111,13 +118,14 @@ export const CreateCollectionModal: React.FC<CreateCollectionModalProps> = ({
             return;
         }
 
+        setIsSubmitting(true);
         try {
-            await api.post('/kyper/collections/create', data);
-            await onSubmit(data);
+            await api.post('/kyper/collections/create', formValues);
+            await onSubmit(formValues);
 
             toast({
                 title: "Collection created",
-                description: `Successfully created collection "${data.name}"`,
+                description: `Successfully created collection "${formValues.name}"`,
                 duration: 5000
             });
 
@@ -143,11 +151,17 @@ export const CreateCollectionModal: React.FC<CreateCollectionModalProps> = ({
                     duration: 6000
                 });
             }
+        } finally {
+            setIsSubmitting(false);
         }
     }
 
     const handleClose = () => {
-        reset();
+        setFormValues({
+            name: "",
+            slug: "",
+            description: ""
+        });
         onClose();
     }
 
@@ -165,23 +179,25 @@ export const CreateCollectionModal: React.FC<CreateCollectionModalProps> = ({
             />
 
             <Modal.Body>
-                <Form noValidate>
+                <Form 
+                    onSubmit={handleFormSubmit} 
+                    noValidate
+                    onClick={(e) => e.stopPropagation()}
+                >
                     <FormField
                         label="Name"
                         required
                     >
-                        <Controller
+                        <Input
                             name="name"
-                            control={control}
-                            rules={{ required: true }}
-                            render={({ field }) => (
-                                <Input
-                                    {...field}
-                                    placeholder="e.g., Blog Posts"
-                                    disabled={isSubmitting}
-                                    required
-                                />
-                            )}
+                            value={formValues.name}
+                            onChange={e => setFormValues(prev => ({
+                                ...prev,
+                                name: e.target.value
+                            }))}
+                            placeholder="e.g., Blog Posts"
+                            disabled={isSubmitting}
+                            required
                         />
                     </FormField>
 
@@ -190,41 +206,33 @@ export const CreateCollectionModal: React.FC<CreateCollectionModalProps> = ({
                         description="URL-friendly identifier (automatically generated from name)"
                         required
                     >
-                        <Controller
-                            name="slug"
-                            control={control}
-                            rules={{ required: true }}
-                            render={({ field }) => (
-                                <>
-                                    <AutogeneratedInput
-                                        {...field}
-                                        placeholder="auto-generated-slug"
-                                        readOnly
-                                        required
-                                    />
-                                    <AutogeneratedNote type="small" muted>
-                                        This field is automatically generated from the name
-                                    </AutogeneratedNote>
-                                </>
-                            )}
-                        />
+                        <>
+                            <Input
+                                name="slug"
+                                value={formValues.slug}
+                                onChange={handleInputChange}
+                                placeholder="auto-generated-slug"
+                                disabled
+                                readOnly
+                                required
+                            />
+                            <AutogeneratedNote type="small" muted>
+                                This field is automatically generated from the name
+                            </AutogeneratedNote>
+                        </>
                     </FormField>
 
                     <FormField
                         label="Description"
                         optional
                     >
-                        <Controller
+                        <TextArea
                             name="description"
-                            control={control}
-                            render={({ field }) => (
-                                <TextArea
-                                    {...field}
-                                    placeholder="Describe what this collection will contain..."
-                                    disabled={isSubmitting}
-                                    rows={4}
-                                />
-                            )}
+                            value={formValues.description}
+                            onChange={handleInputChange}
+                            placeholder="Describe what this collection will contain..."
+                            disabled={isSubmitting}
+                            rows={4}
                         />
                     </FormField>
                 </Form>
@@ -241,7 +249,7 @@ export const CreateCollectionModal: React.FC<CreateCollectionModalProps> = ({
                 <Button
                     variant="solid"
                     color="primary"
-                    onClick={handleSubmit(handleFormSubmit)}
+                    onClick={handleFormSubmit}
                     disabled={isSubmitting}
                     loading={isSubmitting}
                     loadingText="Creating..."

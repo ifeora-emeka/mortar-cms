@@ -98,7 +98,6 @@ export default class CollectionsHandler {
                     )
                 ]);
 
-                // Create default schema for the collection with name and slug fields
                 const defaultSchema = new CollectionSchemaModel({
                     collection: savedCollection._id,
                     schema: [
