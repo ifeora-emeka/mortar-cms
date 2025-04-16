@@ -1,8 +1,10 @@
 import React from 'react'
 import { useRouter } from 'next/navigation'
-import { CollectionListPage } from './collection-list/CollectionListPage'
+import { CollectionListPage } from './collections/CollectionListPage'
 import { NotFoundPlaceholder } from '../components/placeholders/NotFoundPlaceholder'
 import { Layout } from '../components/layout'
+import EntiresPage from './entries/EntiresPage'
+import CollectionsPage from './collections/CollectionsPage'
 
 type Props = {
     segments: string[];
@@ -22,10 +24,12 @@ export default function RootPage({ segments }: Props) {
     const renderModule = () => {
         switch (module) {
             case 'collections':
-                return <CollectionListPage />;
+                return <CollectionsPage segments={segments} />;
+            case 'entries':
+                return <EntiresPage />;
             default:
                 return (
-                    <NotFoundPlaceholder 
+                    <NotFoundPlaceholder
                         title="Page Not Found"
                         message={`The page "${module}" doesn't exist or hasn't been implemented yet.`}
                         onGoBack={handleGoBack}
@@ -37,8 +41,8 @@ export default function RootPage({ segments }: Props) {
     }
 
     return (
-        <>
+        <Layout>
             {renderModule()}
-        </>
+        </Layout>
     )
 }

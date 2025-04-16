@@ -347,7 +347,7 @@ export const CollectionListPage: React.FC = () => {
   }
 
   return (
-    <Layout>
+    <>
       <PageBody
         heading="Collections"
         subheading="Manage your content structure and organization"
@@ -379,6 +379,6 @@ export const CollectionListPage: React.FC = () => {
           isDeleting={isDeleting}
         />
       </PageBody>
-    </Layout>
+    </>
   )
 }

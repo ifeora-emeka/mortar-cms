@@ -47,6 +47,30 @@ interface TableCaptionProps extends React.HTMLAttributes<HTMLTableCaptionElement
   children?: React.ReactNode
 }
 
+const TableContainer = styled.div<{
+  $fullWidth: boolean
+}>`
+  position: relative;
+  overflow-x: auto;
+  width: ${props => props.$fullWidth ? '100%' : 'auto'};
+  border-radius: ${theme.borderRadius.md};
+  scrollbar-width: thin;
+  
+  &::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  &::-webkit-scrollbar-thumb {
+    background: ${theme.colors["muted-foreground"]};
+    border-radius: ${theme.borderRadius.md};
+  }
+`
+
 const StyledTable = styled.table<{
   $variant: "default" | "striped" | "bordered" | "card"
   $compact: boolean
@@ -58,25 +82,44 @@ const StyledTable = styled.table<{
   border-spacing: 0;
   width: ${props => props.$fullWidth ? "100%" : "auto"};
   font-variant-numeric: tabular-nums;
+  background: ${theme.colors.card};
+  border-radius: ${theme.borderRadius.md};
+  overflow: hidden;
   
   ${props => props.$variant === "bordered" && `
     border: 1px solid ${theme.colors.border};
   `}
   
   ${props => props.$variant === "card" && `
-    background: ${theme.colors.card};
-    border-radius: ${theme.borderRadius.md};
     box-shadow: ${theme.shadows.sm};
-    overflow: hidden;
+  `}
+  
+  ${props => props.$stickyHeader && `
+    thead th {
+      position: sticky;
+      top: 0;
+      z-index: 1;
+      background-color: ${theme.colors.card};
+    }
   `}
 `
 
 const StyledTableHead = styled.thead`
+  position: relative;
   background-color: ${theme.colors.card};
-  font-weight: 600;
   
-  tr:last-child th {
-    border-bottom: 2px solid ${theme.colors.border};
+  &:after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 2px;
+    background: linear-gradient(
+      90deg, 
+      ${theme.colors.primary}40,
+      ${theme.colors.primary}
+    );
   }
 `
 
@@ -84,8 +127,11 @@ const StyledTableBody = styled.tbody<{
   $variant: "default" | "striped" | "bordered" | "card"
 }>`
   ${props => props.$variant === "striped" && `
+    tr:nth-child(odd) {
+      background-color: ${theme.colors.accent}50;
+    }
     tr:nth-child(even) {
-      background-color: ${theme.colors.accent};
+      background-color: ${theme.colors.card};
     }
   `}
 `
@@ -96,18 +142,27 @@ const StyledTableRow = styled.tr<{
   $variant: "default" | "striped" | "bordered" | "card"
   $hover: boolean
 }>`
+  transition: all 0.2s ease;
+  
   ${props => props.$disabled && `
-    opacity: 0.5;
+    opacity: 0.6;
     cursor: not-allowed;
   `}
   
   ${props => props.$selected && `
-    background-color: ${theme.colors.accent};
+    background-color: ${theme.colors.primary}15 !important;
+    border-left: 3px solid ${theme.colors.primary};
   `}
   
-  ${props => props.$hover && `
+  ${props => props.$hover && props.$variant !== "striped" && `
     &:hover {
-      background-color: ${theme.colors.accent};
+      background-color: ${theme.colors.accent}50;
+    }
+  `}
+  
+  ${props => props.$hover && props.$variant === "striped" && `
+    &:hover {
+      background-color: ${theme.colors.accent}80 !important;
     }
   `}
 `
@@ -117,13 +172,16 @@ const StyledTableHeader = styled.th<{
   $compact: boolean
   $variant: "default" | "striped" | "bordered" | "card"
 }>`
-  padding: ${props => props.$compact ? theme.spacing.xs : theme.spacing.sm};
+  padding: ${props => props.$compact ? `${theme.spacing.xs} ${theme.spacing.sm}` : `${theme.spacing.sm} ${theme.spacing.md}`};
   text-align: ${props => props.$align};
   color: ${theme.colors.foreground};
   font-weight: 600;
   font-size: ${theme.fontSizes.sm};
   white-space: nowrap;
   position: relative;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  transition: background-color 0.2s ease;
   
   ${props => props.$variant === "bordered" && `
     border: 1px solid ${theme.colors.border};
@@ -131,10 +189,12 @@ const StyledTableHeader = styled.th<{
   
   &:first-child {
     border-top-left-radius: ${props => props.$variant === "card" ? theme.borderRadius.md : '0'};
+    padding-left: ${theme.spacing.lg};
   }
   
   &:last-child {
     border-top-right-radius: ${props => props.$variant === "card" ? theme.borderRadius.md : '0'};
+    padding-right: ${theme.spacing.lg};
   }
 `
 
@@ -143,21 +203,39 @@ const StyledTableCell = styled.td<{
   $compact: boolean
   $variant: "default" | "striped" | "bordered" | "card"
 }>`
-  padding: ${props => props.$compact ? theme.spacing.xs : theme.spacing.sm};
+  padding: ${props => props.$compact ? `${theme.spacing.xs} ${theme.spacing.sm}` : `${theme.spacing.md} ${theme.spacing.md}`};
   text-align: ${props => props.$align};
   color: ${theme.colors.foreground};
   font-size: ${theme.fontSizes.sm};
-  border-bottom: 1px solid ${theme.colors.border};
+  border-bottom: 1px solid ${theme.colors.border}40;
+  vertical-align: middle;
+  transition: all 0.2s ease;
   
   ${props => props.$variant === "bordered" && `
     border: 1px solid ${theme.colors.border};
   `}
+  
+  &:first-child {
+    padding-left: ${theme.spacing.lg};
+  }
+  
+  &:last-child {
+    padding-right: ${theme.spacing.lg};
+  }
 `
 
 const StyledTableFooter = styled.tfoot`
-  border-top: 2px solid ${theme.colors.border};
   background-color: ${theme.colors.card};
   font-weight: 500;
+  
+  tr {
+    border-top: 2px solid ${theme.colors.border};
+  }
+  
+  td {
+    padding: ${theme.spacing.md} ${theme.spacing.md};
+    color: ${theme.colors.foreground};
+  }
 `
 
 const StyledTableCaption = styled.caption`
@@ -165,6 +243,7 @@ const StyledTableCaption = styled.caption`
   font-size: ${theme.fontSizes.sm};
   color: ${theme.colors["muted-foreground"]};
   text-align: left;
+  padding: ${theme.spacing.sm} ${theme.spacing.lg};
 `
 
 export const Table = {
@@ -179,7 +258,7 @@ export const Table = {
     ...props
   }, ref) => {
     return (
-      <div style={{ overflowX: 'auto', width: fullWidth ? '100%' : 'auto' }}>
+      <TableContainer $fullWidth={fullWidth}>
         <StyledTable
           ref={ref}
           $variant={variant}
@@ -193,7 +272,7 @@ export const Table = {
         >
           {children}
         </StyledTable>
-      </div>
+      </TableContainer>
     );
   }),
   

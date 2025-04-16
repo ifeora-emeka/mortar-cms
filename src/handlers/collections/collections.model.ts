@@ -12,7 +12,7 @@ const collectionSchema = new mongoose.Schema(
             type: String,
             required: [true, "Slug is required"],
             trim: true,
-            unique: true, // Add unique constraint
+            unique: true,
             lowercase: true,
             match: [/^[a-z0-9-]+$/, "Slug can only contain lowercase letters, numbers, and hyphens"],
         },
@@ -28,7 +28,6 @@ const collectionSchema = new mongoose.Schema(
     }
 );
 
-// Check if the model already exists to prevent model overwrite error
 export const CollectionsModel =
     mongoose.models.Collections ||
     mongoose.model("Collections", collectionSchema);

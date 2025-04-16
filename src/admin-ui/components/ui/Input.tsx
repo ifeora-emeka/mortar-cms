@@ -17,6 +17,7 @@ interface InputProps extends ComponentDefaultProps {
     name?: string
     id?: string
     required?: boolean
+    readOnly?: boolean
     "aria-label"?: string
     "aria-describedby"?: string
     asChild?: boolean
@@ -217,6 +218,7 @@ export const Input: React.FC<InputProps> = ({
     name,
     id,
     required = false,
+    readOnly = false,
     "aria-label": ariaLabel,
     "aria-describedby": ariaDescribedby,
     asChild = false,
@@ -253,6 +255,7 @@ export const Input: React.FC<InputProps> = ({
                 value={value}
                 onChange={onChange}
                 disabled={disabled}
+                readOnly={readOnly}
                 name={name}
                 id={id}
                 required={required}

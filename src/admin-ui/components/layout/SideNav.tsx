@@ -2,7 +2,7 @@
 
 import React from "react"
 import styled from "styled-components"
-import { ChevronLeft, ChevronRight, LayoutDashboard, FileText, Settings, FolderKanban, Database } from "lucide-react"
+import { ChevronLeft, ChevronRight, LayoutDashboard, FileText, Settings, FolderKanban, Database, PencilIcon, UsersIcon, ImageIcon } from "lucide-react"
 import { theme } from "../../../styles/theme"
 import { Text } from "../ui/Text"
 import { Button } from "../ui/Button"
@@ -25,7 +25,7 @@ const StyledSideNav = styled.aside<{ $isExpanded: boolean }>`
   top: 60px;
   left: 0;
   height: calc(100vh - 60px);
-  width: ${props => props.$isExpanded ? '240px' : '64px'};
+  width: ${props => props.$isExpanded ? '250px' : '64px'};
   background-color: ${theme.colors.card};
   border-right: 1px solid ${theme.colors.border};
   transition: width 0.3s ease;
@@ -68,7 +68,7 @@ const NavLink = styled.a<{ $isActive: boolean; $isExpanded: boolean }>`
   padding: ${props => props.$isExpanded ? `${theme.spacing.sm} ${theme.spacing.md}` : theme.spacing.sm};
   margin-bottom: ${theme.spacing.xs};
   border-radius: ${theme.borderRadius.md};
-  color: ${props => props.$isActive ? theme.colors.primary : theme.colors.foreground};
+  color: ${props => props.$isActive ? theme.colors.primary : theme.colors["muted-foreground"]};
   background-color: ${props => props.$isActive ? `${theme.colors.primary}15` : 'transparent'};
   text-decoration: none;
   cursor: pointer;
@@ -90,7 +90,7 @@ const NavItemText = styled.span<{ $isExpanded: boolean }>`
   white-space: nowrap;
 `
 
-const ToggleContainer = styled.div`
+const ToggleContainer = styled.div<{ $isExpanded: boolean }>`
   display: flex;
   justify-content: ${props => props.$isExpanded ? 'flex-end' : 'center'};
   padding: ${theme.spacing.sm};
@@ -125,12 +125,12 @@ export const SideNav: React.FC<SideNavProps> = ({ isExpanded, onToggle }) => {
   const pathname = usePathname()
   
   const navItems: NavItem[] = [
-    {
-      id: 'dashboard',
-      label: 'Dashboard',
-      icon: <LayoutDashboard size={20} />,
-      href: '/'
-    },
+      {
+        id: 'entires',
+        label: 'Entires',
+        icon: <PencilIcon size={20} />,
+        href: '/entries'
+      },
     {
       id: 'collections',
       label: 'Collections',
@@ -138,31 +138,31 @@ export const SideNav: React.FC<SideNavProps> = ({ isExpanded, onToggle }) => {
       href: '/collections'
     },
     {
-      id: 'schemas',
-      label: 'Schemas',
-      icon: <FolderKanban size={20} />,
-      href: '/schemas'
+      id: 'media',
+      label: 'Media',
+      icon: <ImageIcon size={20} />,
+      href: '/media'
     },
     {
-      id: 'content',
-      label: 'Content',
-      icon: <FileText size={20} />,
-      href: '/content'
+      id: 'users',
+      label: 'Users',
+      icon: <UsersIcon size={20} />,
+      href: '/users'
     },
-    {
-      id: 'settings',
-      label: 'Settings',
-      icon: <Settings size={20} />,
-      href: '/settings'
-    }
+    // {
+    //   id: 'settings',
+    //   label: 'Settings',
+    //   icon: <Settings size={20} />,
+    //   href: '/settings'
+    // }
   ]
   
   const handleNavigation = (href: string) => {
-    router.push(href)
+    router.push(`/admin${href}`)
   }
   
   const isActive = (href: string) => {
-    return pathname?.includes(href) || (href === '/' && pathname === '/')
+    return pathname?.includes(href)
   }
   
   return (
@@ -183,7 +183,7 @@ export const SideNav: React.FC<SideNavProps> = ({ isExpanded, onToggle }) => {
             onClick={() => handleNavigation(item.href)}
           >
             {item.icon}
-            <NavItemText $isExpanded={isExpanded}>{item.label}</NavItemText>
+            {isExpanded && <NavItemText $isExpanded={isExpanded}>{item.label}</NavItemText>}
           </NavLink>
         ))}
       </NavItems>

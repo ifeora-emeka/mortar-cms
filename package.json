@@ -13,12 +13,13 @@
     "build": "bun run build:css && bun run build:ts",
     "build:ts": "tsc --project tsconfig.json --outDir dist",
     "prepublishOnly": "npm version patch && bun run build",
-    "dev": "npx concurrently \"tsc --project tsconfig.json --outDir dist --watch\""
+    "dev": "cross-env NODE_ENV=local npx concurrently \"tsc --project tsconfig.json --outDir dist --watch\""
   },
   "devDependencies": {
     "@types/bun": "latest",
     "@types/react": "^19.1.0",
     "@types/react-dom": "^19.1.1",
+    "cross-env": "^7.0.3",
     "mongoose": "^8.10.1",
     "next": "^15.2.4",
     "react": "^19.1.0",

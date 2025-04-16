@@ -9,7 +9,7 @@ export class RootHandler {
 
     async initialize() {
         try {
-            await dbConnect();
+            // await dbConnect();
         } catch (error) {
             //@ts-ignore
             console.error('Failed to initialize database connection:', error?.message);
@@ -20,6 +20,7 @@ export class RootHandler {
         request: Request,
         {params}: { params: { segments: string[] } }
     ) {
+        await dbConnect();
         const segments = params.segments;
         console.log({segments, url: request.url});
 
@@ -46,6 +47,7 @@ export class RootHandler {
         request: Request,
         { params }: { params: { segments: string[] } }
     ) {
+        await dbConnect();
         const segments = params.segments;
 
         switch (segments[0]) {
@@ -74,6 +76,7 @@ export class RootHandler {
         request: Request,
         {params}: { params: { segments: string[] } }
     ) {
+        await dbConnect();
         const segments = params.segments;
         console.log(segments);
         const body = await request.json();
@@ -88,8 +91,8 @@ export class RootHandler {
         request: Request,
         {params}: { params: { segments: string[] } }
     ) {
+        await dbConnect();
         const segments = params.segments;
-        console.log(segments);
         const body = await request.json();
         return NextResponse.json({
             message: 'PATCH request received',
@@ -102,6 +105,7 @@ export class RootHandler {
         request: Request,
         {params}: { params: { segments: string[] } }
     ) {
+        await dbConnect();
         const segments = params.segments;
         console.log(segments);
         return NextResponse.json({
@@ -114,6 +118,7 @@ export class RootHandler {
         request: Request,
         {params}: { params: { segments: string[] } }
     ) {
+        await dbConnect();
         const segments = params.segments;
         console.log(segments);
         return new NextResponse(null, {

@@ -1,6 +1,6 @@
 "use client"
 
-import React from "react"
+import React, { useMemo } from "react"
 import styled from "styled-components"
 import { theme } from "../../../styles/theme"
 import { Table } from "../ui/Table"
@@ -16,18 +16,47 @@ interface TablePlaceholderProps {
   headerHeight?: number | string
 }
 
-const HeaderSkeleton = styled(Skeleton)`
-  width: 100%;
-`
-
-const CellSkeleton = styled(Skeleton)`
-  width: 100%;
-`
-
 const TableWrapper = styled.div`
   width: 100%;
   overflow-x: auto;
+  border-radius: ${theme.borderRadius.md};
+  box-shadow: ${theme.shadows.sm};
 `
+
+const HeaderSkeleton = styled(Skeleton)<{$width: string, $align: string}>`
+  width: ${props => props.$width};
+  border-radius: ${theme.borderRadius.sm};
+  margin: ${props => props.$align === 'right' ? '0 0 0 auto' : props.$align === 'center' ? '0 auto' : '0'};
+`
+
+const CellSkeleton = styled(Skeleton)<{$align: string}>`
+  width: 70%;
+  border-radius: ${theme.borderRadius.sm};
+  margin: ${props => props.$align === 'right' ? '0 0 0 auto' : props.$align === 'center' ? '0 auto' : '0'};
+  transition: all 0.3s ease;
+  
+  &:hover {
+    transform: translateY(-1px);
+  }
+`
+
+const getRandomWidth = (min: number, max: number, isLast = false): string => {
+  const randomWidth = Math.floor(Math.random() * (max - min + 1)) + min;
+  return `${randomWidth}%`;
+};
+
+const getRandomCellWidth = (baseWidth: string, index: number, columnCount: number): string => {
+  let width = parseInt(baseWidth);
+  
+  if (index === columnCount - 1) return '80px';
+  
+  const variance = Math.random() * 30 - 15;
+  const adjustedWidth = width + variance;
+  
+  const finalWidth = Math.max(width * 0.3, Math.min(width * 1.3, adjustedWidth));
+  
+  return `${finalWidth.toFixed(1)}%`;
+};
 
 export const TablePlaceholder: React.FC<TablePlaceholderProps> = ({
   rowCount = 5,
@@ -38,40 +67,48 @@ export const TablePlaceholder: React.FC<TablePlaceholderProps> = ({
   rowHeight = "40px",
   headerHeight = "48px",
 }) => {
-  // Generate columns with varying widths for more natural look
-  const generateColumns = () => {
+  const baseColumns = useMemo(() => {
     return Array(columnCount).fill(0).map((_, i) => {
-      // Last column is usually for actions and is smaller
-      if (i === columnCount - 1) return "120px"
+      if (i === columnCount - 1) return "80px";
       
-      // Create columns with varying widths
-      const baseWidth = Math.floor(Math.random() * 20) + 10
-      return `${baseWidth}%`
-    })
-  }
+      const totalRemainingWidth = 100 - (i === columnCount - 1 ? 10 : 0);
+      const avgColWidth = totalRemainingWidth / (columnCount - 1);
+      
+      const minWidth = Math.max(10, avgColWidth * 0.7);
+      const maxWidth = Math.min(40, avgColWidth * 1.3);
+      
+      return getRandomWidth(minWidth, maxWidth);
+    });
+  }, [columnCount]);
   
-  const columns = generateColumns()
+  const rowCellWidths = useMemo(() => {
+    return Array(rowCount).fill(0).map(() => 
+      baseColumns.map((baseWidth, i) => 
+        getRandomCellWidth(baseWidth, i, columnCount)
+      )
+    );
+  }, [rowCount, baseColumns, columnCount]);
   
-  // Convert number heights to strings with 'px' units if needed
   const getHeightValue = (height: string | number): string => {
     if (typeof height === 'number') {
-      return `${height}px`
+      return `${height}px`;
     }
-    return height
-  }
+    return height;
+  };
   
   return (
     <TableWrapper className={className}>
-      <Table.Root variant="striped" size="medium" hover={false} fullWidth={true}>
+      <Table.Root variant="card" hover={false} fullWidth={true}>
         {hasHeader && (
           <Table.Head>
             <Table.Row>
-              {columns.map((width, i) => (
-                <Table.Header key={i} align={i === columns.length - 1 ? "right" : "left"}>
+              {baseColumns.map((width, i) => (
+                <Table.Header key={i} align={i === columnCount - 1 ? "right" : "left"}>
                   <HeaderSkeleton
                     variant="text"
                     animation={animation}
-                    width={width}
+                    $width={width}
+                    $align={i === columnCount - 1 ? "right" : "left"}
                     height={getHeightValue(headerHeight)}
                   />
                 </Table.Header>
@@ -85,25 +122,32 @@ export const TablePlaceholder: React.FC<TablePlaceholderProps> = ({
             .fill(0)
             .map((_, rowIndex) => (
               <Table.Row key={rowIndex}>
-                {columns.map((width, colIndex) => (
-                  <Table.Cell
-                    key={`${rowIndex}-${colIndex}`}
-                    align={colIndex === columns.length - 1 ? "right" : "left"}
-                  >
-                    <CellSkeleton
-                      variant="text"
-                      animation={animation}
-                      width={colIndex === columns.length - 1 ? "80px" : width}
-                      height={getHeightValue(rowHeight)}
-                    />
-                  </Table.Cell>
-                ))}
+                {rowCellWidths[rowIndex].map((width, colIndex) => {
+                  const align = colIndex === columnCount - 1 ? "right" : "left";
+                  // Random height variation for more natural appearance
+                  const heightVariance = Math.random() * 10 - 5; // +/- 5px
+                  const baseHeight = typeof rowHeight === 'number' ? rowHeight : parseInt(rowHeight);
+                  const cellHeight = `${Math.max(10, baseHeight + heightVariance)}px`;
+                  
+                  return (
+                    <Table.Cell
+                      key={`${rowIndex}-${colIndex}`}
+                      align={align}
+                    >
+                      <CellSkeleton
+                        variant="text"
+                        animation={animation}
+                        $align={align}
+                      />
+                    </Table.Cell>
+                  );
+                })}
               </Table.Row>
             ))}
         </Table.Body>
       </Table.Root>
     </TableWrapper>
-  )
-}
+  );
+};
 
 TablePlaceholder.displayName = "TablePlaceholder"
