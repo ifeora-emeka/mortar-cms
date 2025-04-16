@@ -6,11 +6,17 @@ import * as RadioGroupPrimitive from "@radix-ui/react-radio-group"
 import { theme } from "../../../styles/theme"
 import { Color, ComponentDefaultProps } from "../../../types/components.types"
 
-interface RadioGroupProps extends ComponentDefaultProps, React.ComponentPropsWithoutRef<typeof RadioGroupPrimitive.Root> {
+// Rename to avoid conflict with Radix UI's type
+interface CustomRadioGroupProps extends Omit<ComponentDefaultProps, 'onClick'> {
   color?: Color
   orientation?: "horizontal" | "vertical"
   disabled?: boolean
 }
+
+// Combine our props with Radix UI's props
+interface RadioGroupProps extends 
+  CustomRadioGroupProps,
+  Omit<React.ComponentPropsWithoutRef<typeof RadioGroupPrimitive.Root>, keyof CustomRadioGroupProps> {}
 
 interface RadioGroupItemProps extends React.ComponentPropsWithoutRef<typeof RadioGroupPrimitive.Item> {
   color?: Color
@@ -20,6 +26,7 @@ interface RadioGroupItemProps extends React.ComponentPropsWithoutRef<typeof Radi
 
 interface RadioGroupLabelProps extends React.HTMLAttributes<HTMLLabelElement> {
   disabled?: boolean
+  htmlFor?: string; // Add htmlFor explicitly
 }
 
 const StyledRadioGroup = styled(RadioGroupPrimitive.Root)<{

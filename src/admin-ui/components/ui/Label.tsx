@@ -6,13 +6,19 @@ import * as LabelPrimitive from "@radix-ui/react-label"
 import { theme } from "../../../styles/theme"
 import { ComponentDefaultProps } from "../../../types/components.types"
 
-interface LabelProps extends ComponentDefaultProps, React.ComponentPropsWithoutRef<typeof LabelPrimitive.Root> {
+// Avoid conflict with Radix UI's LabelProps
+interface CustomLabelProps extends Omit<ComponentDefaultProps, 'color'> {
   htmlFor?: string
   required?: boolean
   optional?: boolean
   disabled?: boolean
   error?: boolean
 }
+
+// Combine our props with Radix UI's props
+interface LabelProps extends 
+  CustomLabelProps,
+  Omit<React.ComponentPropsWithoutRef<typeof LabelPrimitive.Root>, keyof CustomLabelProps> {}
 
 const StyledLabel = styled(LabelPrimitive.Root)<{
   $disabled?: boolean
@@ -42,7 +48,10 @@ const OptionalLabel = styled.span`
   font-weight: normal;
 `
 
-export const Label: React.FC<LabelProps> = ({
+export const Label = React.forwardRef<
+  React.ElementRef<typeof LabelPrimitive.Root>,
+  LabelProps
+>(({
   children,
   htmlFor,
   required = false,
@@ -51,9 +60,10 @@ export const Label: React.FC<LabelProps> = ({
   error = false,
   className,
   ...props
-}) => {
+}, ref) => {
   return (
     <StyledLabel 
+      ref={ref}
       htmlFor={htmlFor}
       $disabled={disabled}
       $error={error}
@@ -66,6 +76,6 @@ export const Label: React.FC<LabelProps> = ({
       {optional && <OptionalLabel>(optional)</OptionalLabel>}
     </StyledLabel>
   )
-}
+})
 
 Label.displayName = "Label"

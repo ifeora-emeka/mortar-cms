@@ -3,14 +3,19 @@
 import React from "react"
 import styled, { keyframes } from "styled-components"
 import { theme } from "../../../styles/theme"
-import { ComponentDefaultProps } from "../../../types/components.types"
+import { BorderRadius, ComponentDefaultProps } from "../../../types/components.types"
 
-interface SkeletonProps extends ComponentDefaultProps {
+// Define specific variant types for Skeleton component
+type SkeletonVariant = "rectangle" | "circle" | "text"
+type SkeletonAnimation = "pulse" | "wave" | "none"
+
+// Extend ComponentDefaultProps but exclude both variant and borderRadius properties
+interface SkeletonProps extends Omit<ComponentDefaultProps, 'variant' | 'borderRadius'> {
   height?: string
   width?: string | number
-  borderRadius?: string
-  variant?: "rectangle" | "circle" | "text"
-  animation?: "pulse" | "wave" | "none"
+  borderRadius?: BorderRadius | string // Accept both BorderRadius enum and custom string values
+  variant?: SkeletonVariant
+  animation?: SkeletonAnimation
 }
 
 const pulse = keyframes`
@@ -38,8 +43,8 @@ const StyledSkeleton = styled.div<{
   $height?: string
   $width?: string | number
   $borderRadius?: string
-  $variant: "rectangle" | "circle" | "text"
-  $animation: "pulse" | "wave" | "none"
+  $variant: SkeletonVariant
+  $animation: SkeletonAnimation
 }>`
   display: inline-block;
   background-color: ${theme.colors.muted};
@@ -119,7 +124,7 @@ export const Skeleton: React.FC<SkeletonProps> = ({
     <StyledSkeleton
       $height={height}
       $width={width}
-      $borderRadius={borderRadius}
+      $borderRadius={typeof borderRadius === 'string' ? borderRadius : undefined}
       $variant={variant}
       $animation={animation}
       className={className}

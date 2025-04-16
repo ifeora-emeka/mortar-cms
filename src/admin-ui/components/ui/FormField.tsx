@@ -61,23 +61,61 @@ export const FormField: React.FC<FormFieldProps> = ({
       {React.Children.map(children, child => {
         if (!React.isValidElement(child)) return child
         
-        return React.cloneElement(child as React.ReactElement, {
-          id: fieldId,
-          name: name || fieldId,
-          "aria-describedby": helpText ? helpTextId : undefined,
-          "aria-invalid": hasError ? true : undefined,
-          "aria-errormessage": hasError ? errorId : undefined,
-          error: hasError,
-          required,
-          ...child.props
-        })
+        // Type assertion to access props safely
+        const childElement = child as React.ReactElement;
+        const props = childElement.props as Record<string, any>;
+        
+        // Only apply ARIA attributes if the child component supports them
+        const childProps: Record<string, any> = {}; 
+        
+        // Common props that most form controls accept
+        if (typeof childElement.type === 'string' || 'id' in props) {
+          childProps.id = fieldId;
+        }
+        
+        if (typeof childElement.type === 'string' || 'name' in props) {
+          childProps.name = name || fieldId;
+        }
+        
+        if ('error' in props) {
+          childProps.error = hasError;
+        }
+        
+        if (typeof childElement.type === 'string' || 'required' in props) {
+          childProps.required = required;
+        }
+        
+        // ARIA attributes for accessibility
+        if (typeof childElement.type === 'string' || 'aria-describedby' in props) {
+          if (helpText) {
+            childProps['aria-describedby'] = helpTextId;
+          }
+        }
+        
+        if (typeof childElement.type === 'string' || 'aria-invalid' in props) {
+          if (hasError) {
+            childProps['aria-invalid'] = true;
+          }
+        }
+        
+        if (typeof childElement.type === 'string' || 'aria-errormessage' in props) {
+          if (hasError) {
+            childProps['aria-errormessage'] = errorId;
+          }
+        }
+        
+        return React.cloneElement(childElement, {
+          ...props,
+          ...childProps
+        });
       })}
       
       {(helpText || errorMessage) && (
         <HelpText 
-          type="small" 
-          id={errorMessage ? errorId : (helpText ? helpTextId : undefined)}
+          type="small"
           $error={hasError}
+          as="div" // Use div instead which can have an id attribute
+          className={errorMessage ? errorId : (helpText ? helpTextId : undefined)}
         >
           {errorMessage || helpText}
         </HelpText>
