@@ -1,9 +1,22 @@
 "use client"
 
-import React from "react"
+import React, { createContext, useContext } from "react"
 import styled from "styled-components"
 import { theme } from "../../../styles/theme"
 import { ComponentDefaultProps } from "../../../types/components.types"
+
+// Create a context to pass table configuration to child components
+interface TableContextType {
+  variant: "default" | "striped" | "bordered" | "card";
+  compact: boolean;
+  hover: boolean;
+}
+
+const TableContext = createContext<TableContextType>({
+  variant: "default",
+  compact: false,
+  hover: false,
+});
 
 //@ts-ignore
 interface TableRootProps extends ComponentDefaultProps {
@@ -258,21 +271,23 @@ export const Table = {
     ...props
   }, ref) => {
     return (
-      <TableContainer $fullWidth={fullWidth}>
-        <StyledTable
-          ref={ref}
-          $variant={variant}
-          $compact={compact}
-          $hover={hover}
-          $stickyHeader={stickyHeader}
-          $fullWidth={fullWidth}
-          className={className}
-          role="table"
-          {...props}
-        >
-          {children}
-        </StyledTable>
-      </TableContainer>
+      <TableContext.Provider value={{ variant, compact, hover }}>
+        <TableContainer $fullWidth={fullWidth}>
+          <StyledTable
+            ref={ref}
+            $variant={variant}
+            $compact={compact}
+            $hover={hover}
+            $stickyHeader={stickyHeader}
+            $fullWidth={fullWidth}
+            className={className}
+            role="table"
+            {...props}
+          >
+            {children}
+          </StyledTable>
+        </TableContainer>
+      </TableContext.Provider>
     );
   }),
   
@@ -293,8 +308,7 @@ export const Table = {
     className,
     ...props
   }, ref) => {
-    // Get variant from context or parent component
-    const variant = "default";
+    const { variant } = useContext(TableContext);
     
     return (
       <StyledTableBody 
@@ -315,9 +329,7 @@ export const Table = {
     className,
     ...props
   }, ref) => {
-    // Get variant and hover from context or parent component
-    const variant = "default";
-    const hover = false;
+    const { variant, hover } = useContext(TableContext);
     
     return (
       <StyledTableRow 
@@ -343,9 +355,7 @@ export const Table = {
     scope = "col",
     ...props
   }, ref) => {
-    // Get variant and compact from context or parent component
-    const variant = "default";
-    const compact = false;
+    const { variant, compact } = useContext(TableContext);
     
     return (
       <StyledTableHeader 
@@ -369,9 +379,7 @@ export const Table = {
     className,
     ...props
   }, ref) => {
-    // Get variant and compact from context or parent component
-    const variant = "default";
-    const compact = false;
+    const { variant, compact } = useContext(TableContext);
     
     return (
       <StyledTableCell 

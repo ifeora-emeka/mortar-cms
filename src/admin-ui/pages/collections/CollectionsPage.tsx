@@ -1,5 +1,6 @@
 import React from 'react'
 import { CollectionListPage } from './CollectionListPage';
+import CollectionDetailsPage from './CollectionDetailsPage';
 
 type Props = {
     segments: string[];
@@ -7,8 +8,8 @@ type Props = {
 
 export default function CollectionsPage({ segments }: Props) {
     if (segments[1]) {
-        return <div>Collection: {segments[1]}</div>
+        return <CollectionDetailsPage />
     } else {
-        return <CollectionListPage/>
+        return <CollectionListPage />
     }
 }

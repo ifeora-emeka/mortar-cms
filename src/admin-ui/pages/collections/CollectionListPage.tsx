@@ -14,6 +14,7 @@ import { CreateCollectionModal } from "./CreateCollectionModal"
 import { Dropdown, DropdownTrigger, DropdownContent, DropdownItem } from "../../components/ui/Dropdown"
 import { Modal } from "../../components/ui/Modal"
 import { useToast } from "../../components/ToastProvider"
+import { useRouter } from 'next/navigation'
 import api from "../../../lib/api"
 
 const ActionButton = styled(Button)`
@@ -48,6 +49,19 @@ const ConfirmationModalContent = styled.div`
 
 const WarningText = styled(Text)`
   margin-top: ${theme.spacing.sm};
+`
+
+const ClickableRow = styled(Table.Row)`
+  cursor: pointer;
+  
+  &:hover {
+    cursor: pointer;
+  }
+  
+  // Make sure the dropdown actions don't trigger row click
+  td:last-child {
+    cursor: default;
+  }
 `
 
 interface Collection {
@@ -126,6 +140,7 @@ const DeleteConfirmationModal: React.FC<DeleteModalProps> = ({
 
 export const CollectionListPage: React.FC = () => {
   const { toast } = useToast()
+  const router = useRouter()
   const [collections, setCollections] = useState<Collection[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -235,6 +250,10 @@ export const CollectionListPage: React.FC = () => {
     }
   }
 
+  const handleRowClick = (collection: Collection) => {
+    router.push(`/admin/collections/${collection.slug}`)
+  }
+
   const renderContent = () => {
     if (isLoading) {
       return <TablePlaceholder rowCount={5} columnCount={5} animation="pulse" />
@@ -290,7 +309,7 @@ export const CollectionListPage: React.FC = () => {
           </Table.Head>
           <Table.Body>
             {collections.map((collection) => (
-              <Table.Row key={collection._id}>
+              <ClickableRow key={collection._id} onClick={() => handleRowClick(collection)}>
                 <Table.Cell data-label="Name">
                   <Text type="p" weight="medium">
                     {collection.name}
@@ -332,7 +351,7 @@ export const CollectionListPage: React.FC = () => {
                     </DropdownContent>
                   </Dropdown>
                 </Table.Cell>
-              </Table.Row>
+              </ClickableRow>
             ))}
           </Table.Body>
         </Table.Root>
